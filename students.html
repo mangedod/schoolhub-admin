@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siswa - Schoolhub Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+        }
+    </script>
+    <script>
+        if (localStorage.getItem("color-theme") === "dark" || (!("color-theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark")
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        [x-cloak] { display: none !important; }
+        body { 
+            font-family: "Plus Jakarta Sans", sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 1rem;
+        }
+        
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .side-gradient {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0) 100%);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-slate-100 font-sans" x-data="{ 
+    sidebarOpen: true, 
+    colorMode: localStorage.getItem(`color-theme`) || (window.matchMedia(`(prefers-color-scheme: dark)`).matches ? `dark` : `light`),
+    classFilter: new URLSearchParams(window.location.search).get(`filter`) || `Semua Kelas`,
+    searchQuery: '',
+    showAddModal: false,
+    showViewModal: false,
+    showEditModal: false,
+    selectedStudent: null,
+    tempStudent: { name: '', nisn: '', class: '', status: '' },
+    newStudent: {
+        name: '',
+        nisn: '',
+        class: '',
+        status: 'LUNAS'
+    },
+    students: [
+        { id: 1, name: 'Andi Wijaya', nisn: '001293881', class: 'X-IPA-1', status: 'LUNAS', avatar: 'AW', color: 'from-blue-500 to-indigo-600' },
+        { id: 2, name: 'Budi Raharjo', nisn: '001293882', class: 'X-IPA-2', status: 'MENUNGGAK', avatar: 'BR', color: 'from-emerald-500 to-teal-600' },
+        { id: 3, name: 'Citra Lestari', nisn: '001293883', class: 'X-IPA-1', status: 'LUNAS', avatar: 'CL', color: 'from-purple-500 to-pink-600' },
+        { id: 4, name: 'Dedi Kurniawan', nisn: '001293884', class: 'X-IPS-1', status: 'LUNAS', avatar: 'DK', color: 'from-amber-500 to-orange-600' },
+        { id: 5, name: 'Eka Putri', nisn: '001293885', class: 'X-IPA-3', status: 'MENUNGGAK', avatar: 'EP', color: 'from-rose-500 to-red-600' }
+    ],
+    get filteredStudents() {
+        return this.students.filter(s => {
+            const matchesSearch = s.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || s.nisn.includes(this.searchQuery);
+            const matchesClass = this.classFilter === 'Semua Kelas' || s.class === this.classFilter;
+            return matchesSearch && matchesClass;
+        });
+    },
+    saveStudent() {
+        if(!this.newStudent.name || !this.newStudent.nisn || !this.newStudent.class) return alert('Mohon isi semua data!');
+        
+        const colors = ['from-blue-500 to-indigo-600', 'from-emerald-500 to-teal-600', 'from-purple-500 to-pink-600', 'from-amber-500 to-orange-600', 'from-rose-500 to-red-600'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        const initials = this.newStudent.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+        this.students.unshift({
+            id: Date.now(),
+            name: this.newStudent.name,
+            nisn: this.newStudent.nisn,
+            class: this.newStudent.class,
+            status: this.newStudent.status,
+            avatar: initials,
+            color: randomColor
+        });
+
+        this.showAddModal = false;
+        this.newStudent = { name: '', nisn: '', class: '', status: 'LUNAS' };
+    },
+    viewStudent(student) {
+        this.selectedStudent = student;
+        this.showViewModal = true;
+    },
+    editStudent(student) {
+        this.selectedStudent = student;
+        this.tempStudent = { ...student };
+        this.showEditModal = true;
+    },
+    updateStudent() {
+        const index = this.students.findIndex(s => s.id === this.selectedStudent.id);
+        if (index !== -1) {
+            const initials = this.tempStudent.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            this.students[index] = { ...this.tempStudent, avatar: initials };
+        }
+        this.showEditModal = false;
+    }
+}">,oldString:
+}">
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 z-50 w-full h-16 glass-nav flex items-center justify-between px-6 shadow-sm">
+        <div class="flex items-center justify-start">
+            <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-xl transition-colors">
+                <i class="bi bi-list text-2xl"></i>
+            </button>
+            <a href="index.html" class="flex ml-4 items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                    <span class="font-bold text-sm">E</span>
+                </div>
+                <span class="self-center text-lg font-bold whitespace-nowrap text-gray-800 dark:text-white">Schoolhub <span class="text-blue-600">Admin</span></span>
+            </a>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Theme Toggle -->
+            <button @click="document.documentElement.classList.toggle(`dark`); colorMode = document.documentElement.classList.contains(`dark`) ? `dark` : `light`; localStorage.setItem(`color-theme`, colorMode)" 
+                class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 transition-colors">
+                <i x-show="colorMode === `light`" class="bi bi-moon-stars"></i>
+                <i x-show="colorMode === `dark`" class="bi bi-sun text-yellow-500"></i>
+            </button>
+            <div class="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-slate-800">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-semibold text-gray-800 dark:text-white leading-none mb-1">Budi Santoso</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Bendahara</p>
+                </div>
+                <img class="w-8 h-8 rounded-full border border-gray-200 dark:border-slate-700" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Budi" alt="avatar" />
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 h-screen pt-16 transition-all duration-300 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800" :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full sm:w-20 sm:translate-x-0'" aria-label="Sidebar">
+        <div class="h-full px-3 py-4 overflow-y-auto hide-scrollbar side-gradient flex flex-col">
+            <ul class="space-y-1 font-medium">
+                <li>
+                    <a href="index.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-grid-fill w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Dashboard</span>
+                    </a>
+                </li>
+                <div x-show="sidebarOpen" class="pt-6 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Keuangan</div>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-wallet2 w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Billing Sistem</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="billing-activation.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Aktivasi Billing</a></li>
+                        <li><a href="billing-master.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Tagihan</a></li>
+                        <li><a href="billing-generate.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Generate Tagihan</a></li>
+                        <li><a href="billing-invoice.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Invoice & Penagihan</a></li>
+                        <li><a href="billing-arrears.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Tunggakan & Reminder</a></li>
+                        <li><a href="billing-reconciliation.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Rekonsiliasi</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="operational.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-cash-stack w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Operasional</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reports.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-file-earmark-bar-graph w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Laporan Keuangan</span>
+                    </a>
+                </li>
+                <div x-show="sidebarOpen" class="pt-6 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Data Master</div>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-building w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Sekolah</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="school-profile.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Profil Sekolah</a></li>
+                        <li><a href="school-data.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Tahun & Kelas</a></li>
+                    </ul>
+                </li>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-person-badge-fill w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Guru & Staff</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="teachers.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Guru</a></li>
+                        <li><a href="teacher-assignments.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Wali Kelas</a></li>
+                    </ul>
+                </li>
+                <li x-data="{ open: true }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-people-fill w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Siswa & Wali</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="students.html" class="block py-2 px-6 text-[13px] text-blue-600 font-bold bg-blue-50/50 dark:bg-blue-900/20 rounded-r-lg transition-colors">Master Siswa</a></li>
+                        <li><a href="students-import.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Import Data</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="mt-auto px-2">
+                <a href="login.html" class="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 rounded-xl hover:bg-red-100 transition-all">
+                    <i class="bi bi-box-arrow-right text-lg"></i>
+                    <span x-show="sidebarOpen">KELUAR</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+                
+
+    <main class="pt-20 transition-all duration-300" :class="sidebarOpen ? 'ml-64' : 'ml-20'">
+        <div class="p-6 max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                <div>
+                    <h1 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Master Data Siswa</h1>
+                    <p class="text-sm text-gray-500 dark:text-slate-400 font-medium mt-1">
+                        Menampilkan daftar siswa <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-2 py-0.5 rounded-lg font-bold" x-text="classFilter"></span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative group hidden sm:block">
+                        <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
+                        <input type="text" x-model="searchQuery" placeholder="Cari NISN atau Nama..." 
+                               class="pl-11 pr-5 py-3.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none w-64 shadow-sm transition-all">
+                    </div>
+                    <a href="students-import.html" class="px-5 py-3.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700/50 text-gray-700 dark:text-gray-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-slate-750 transition-all flex items-center gap-2 shadow-sm">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Import
+                    </a>
+                    <button @click="showAddModal = true; newStudent.class = (classFilter !== 'Semua Kelas' ? classFilter : '')" class="px-6 py-3.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all flex items-center gap-2">
+                        <i class="bi bi-person-plus-fill"></i> Tambah Siswa
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Table Card -->
+            <div class="glass-card overflow-hidden border border-gray-100 dark:border-white/5 shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-gray-50/50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">
+                                <th class="px-8 py-5">Identitas Siswa</th>
+                                <th class="px-8 py-5">Kelas / Rombel</th>
+                                <th class="px-8 py-5 text-center">Status Pembayaran</th>
+                                <th class="px-8 py-5 text-right w-20">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-slate-800/50">
+                            <template x-for="student in filteredStudents" :key="student.id">
+                                <tr class="group hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-all">
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center gap-4">
+                                            <div :class="'w-12 h-12 bg-gradient-to-br ' + student.color + ' rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-lg shadow-blue-500/20'" x-text="student.avatar"></div>
+                                            <div>
+                                                <p class="text-sm font-black text-gray-900 dark:text-white tracking-tight" x-text="student.name"></p>
+                                                <p class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase" x-text="'NISN: ' + student.nisn"></p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 rounded-full text-[10px] font-black italic" x-text="student.class"></span>
+                                    </td>
+                                    <td class="px-8 py-5 text-center">
+                                        <span :class="student.status === 'LUNAS' ? 'inline-block px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/30' : 'inline-block px-4 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-red-100 dark:border-red-900/30'" x-text="student.status"></span>
+                                    </td>
+                                    <td class="px-8 py-5 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button @click="viewStudent(student)" class="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 rounded-lg transition-colors"><i class="bi bi-eye"></i></button>
+                                            <button @click="editStudent(student)" class="p-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 rounded-lg transition-colors"><i class="bi bi-pencil-square"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <!-- Empty State -->
+                            <template x-if="filteredStudents.length === 0">
+                                <tr>
+                                    <td colspan="4" class="px-8 py-10 text-center">
+                                        <div class="flex flex-col items-center justify-center text-gray-400">
+                                            <i class="bi bi-search text-4xl mb-3"></i>
+                                            <p class="text-sm font-bold uppercase tracking-widest">Siswa tidak ditemukan</p>
+                                            <p class="text-xs">Coba kata kunci lain atau filter berbeda</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer Pagination -->
+                <div class="px-8 py-6 bg-gray-50/50 dark:bg-slate-800/30 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Halaman 1 dari 124</p>
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 border border-gray-200 dark:border-slate-700 text-gray-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white dark:hover:bg-slate-800 transition-all cursor-not-allowed">Sebelumnya</button>
+                        <button class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-blue-500 transition-all">Selanjutnya</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-20 pb-10 text-center">
+                <p class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-[0.3em]">Schoolhub Management System Premium v2.4.0</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Tambah Siswa -->
+    <div x-show="showAddModal" x-cloak class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <!-- Backdrop -->
+            <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showAddModal = false"></div>
+
+            <!-- Modal Panel -->
+            <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="relative bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-lg p-8 md:p-10 shadow-2xl border border-white/20 overflow-hidden">
+                <div class="absolute top-0 right-0 p-8">
+                    <button @click="showAddModal = false" class="text-gray-400 hover:text-red-500 transition-colors">
+                        <i class="bi bi-x-lg text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Tambah Siswa Baru</h3>
+                    <p class="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">Input Data Master Siswa</p>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Nama Lengkap Siswa</label>
+                        <input type="text" x-model="newStudent.name" placeholder="Contoh: Andi Wijaya" class="w-full bg-gray-50 dark:bg-slate-800 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">NISN</label>
+                        <input type="text" x-model="newStudent.nisn" placeholder="10 Digit NISN" class="w-full bg-gray-50 dark:bg-slate-800 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div x-show="!new URLSearchParams(window.location.search).get('filter')">
+                            <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Kelas / Rombel</label>
+                            <select x-model="newStudent.class" class="w-full bg-gray-50 dark:bg-slate-800 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                <option value="">Pilih Kelas</option>
+                                <option>X-IPA-1</option>
+                                <option>X-IPA-2</option>
+                                <option>X-IPS-1</option>
+                                <option>XI-IPA-1</option>
+                                <option>XI-IPS-1</option>
+                            </select>
+                        </div>
+                        <div x-show="new URLSearchParams(window.location.search).get('filter')" class="col-span-1">
+                            <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Kelas / Rombel</label>
+                            <div class="w-full bg-gray-100 dark:bg-slate-800/50 rounded-2xl px-5 py-4 text-sm font-bold text-gray-500 dark:text-slate-400 border border-dashed border-gray-300 dark:border-slate-700" x-text="classFilter"></div>
+                        </div>
+                        <div :class="new URLSearchParams(window.location.search).get('filter') ? 'col-span-1' : ''">
+                            <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Status Awal</label>
+                            <select x-model="newStudent.status" class="w-full bg-gray-50 dark:bg-slate-800 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                <option>LUNAS</option>
+                                <option>MENUNGGAK</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex gap-3">
+                        <button @click="showAddModal = false" class="flex-1 px-6 py-4 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all">Batal</button>
+                        <button @click="saveStudent()" class="flex-[2] px-6 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all">Simpan Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Lihat Detail -->
+    <div x-show="showViewModal" x-cloak class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div x-show="showViewModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showViewModal = false"></div>
+            <div x-show="showViewModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="relative bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl border border-white/20">
+                <div class="text-center">
+                    <div :class="'w-24 h-24 mx-auto mb-6 bg-gradient-to-br ' + selectedStudent?.color + ' rounded-[2rem] flex items-center justify-center text-white text-3xl font-black shadow-xl'" x-text="selectedStudent?.avatar"></div>
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight" x-text="selectedStudent?.name"></h3>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1" x-text="'NISN: ' + selectedStudent?.nisn"></p>
+                    
+                    <div class="mt-8 grid grid-cols-2 gap-4 text-left">
+                        <div class="p-4 bg-gray-50 dark:bg-slate-800 rounded-2xl">
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Kelas</p>
+                            <p class="text-sm font-bold text-gray-700 dark:text-white" x-text="selectedStudent?.class"></p>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-slate-800 rounded-2xl">
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                            <p class="text-sm font-bold tracking-tight" :class="selectedStudent?.status === 'LUNAS' ? 'text-emerald-500' : 'text-red-500'" x-text="selectedStudent?.status"></p>
+                        </div>
+                    </div>
+
+                    <button @click="showViewModal = false" class="w-full mt-8 px-6 py-4 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Siswa -->
+    <div x-show="showEditModal" x-cloak class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showEditModal = false"></div>
+            <div x-show="showEditModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="relative bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-lg p-8 md:p-10 shadow-2xl border border-white/20">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Edit Data Siswa</h3>
+                    <p class="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">Perbarui Informasi Master Siswa</p>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Nama Lengkap Siswa</label>
+                        <input type="text" x-model="tempStudent.name" class="w-full bg-gray-50 dark:bg-slate-800 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">NISN</label>
+                        <input type="text" x-model="tempStudent.nisn" class="w-full bg-gray-50 dark:bg-slate-800 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Kelas / Rombel</label>
+                            <select x-model="tempStudent.class" class="w-full bg-gray-50 dark:bg-slate-800 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                <option>X-IPA-1</option>
+                                <option>X-IPA-2</option>
+                                <option>X-IPS-1</option>
+                                <option>XI-IPA-1</option>
+                                <option>XI-IPS-1</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Status Pembayaran</label>
+                            <select x-model="tempStudent.status" class="w-full bg-gray-50 dark:bg-slate-800 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                <option>LUNAS</option>
+                                <option>MENUNGGAK</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex gap-3">
+                        <button @click="showEditModal = false" class="flex-1 px-6 py-4 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all">Batal</button>
+                        <button @click="updateStudent()" class="flex-[2] px-6 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all">Update Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+

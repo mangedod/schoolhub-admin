@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekonsiliasi Otomatis - Schoolhub Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 1rem;
+        }
+        
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .side-gradient {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0) 100%);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-slate-100 font-sans" x-data="{ 
+    sidebarOpen: true, 
+    colorMode: localStorage.getItem('color-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+    isRefreshing: false,
+    isAutomatching: false,
+    showManualFix: false,
+    showSettlementHistory: false,
+    selectedTxn: null,
+    refreshData() {
+        this.isRefreshing = true;
+        setTimeout(() => { this.isRefreshing = false }, 1500);
+    },
+    runAutomatch() {
+        this.isAutomatching = true;
+        setTimeout(() => { this.isAutomatching = false }, 3000);
+    }
+}">
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 z-50 w-full h-16 glass-nav flex items-center justify-between px-6 shadow-sm">
+        <div class="flex items-center justify-start">
+            <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-xl transition-colors">
+                <i class="bi bi-list text-2xl"></i>
+            </button>
+            <a href="index.html" class="flex ml-4 items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                    <span class="font-bold text-sm">E</span>
+                </div>
+                <span class="self-center text-lg font-bold whitespace-nowrap text-gray-800 dark:text-white">Schoolhub <span class="text-blue-600">Admin</span></span>
+            </a>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Theme Toggle -->
+            <button @click="document.documentElement.classList.toggle('dark'); colorMode = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; localStorage.setItem('color-theme', colorMode)" 
+                class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 transition-colors">
+                <i x-show="colorMode === 'light'" class="bi bi-moon-stars"></i>
+                <i x-show="colorMode === 'dark'" class="bi bi-sun text-yellow-500"></i>
+            </button>
+            <div class="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-slate-800">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-semibold text-gray-800 dark:text-white leading-none mb-1">Budi Santoso</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Bendahara</p>
+                </div>
+                <img class="w-8 h-8 rounded-full border border-gray-200 dark:border-slate-700" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Budi" alt="avatar" />
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 h-screen pt-16 transition-all duration-300 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800" :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full sm:w-20 sm:translate-x-0'" aria-label="Sidebar">
+        <div class="h-full px-3 py-4 overflow-y-auto hide-scrollbar side-gradient flex flex-col">
+            <ul class="space-y-1 font-medium">
+                <li>
+                    <a href="index.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-grid-fill w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Dashboard</span>
+                    </a>
+                </li>
+                <div x-show="sidebarOpen" class="pt-6 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Keuangan</div>
+                <li x-data="{ open: true }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-wallet2 w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Billing Sistem</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="billing-activation.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Aktivasi Billing</a></li>
+                        <li><a href="billing-master.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Tagihan</a></li>
+                        <li><a href="billing-generate.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Generate Tagihan</a></li>
+                        <li><a href="billing-invoice.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Invoice & Penagihan</a></li>
+                        <li><a href="billing-arrears.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Tunggakan & Reminder</a></li>
+                        <li><a href="billing-reconciliation.html" class="block py-2 px-6 text-[13px] text-blue-600 font-bold bg-blue-50/50 dark:bg-blue-900/20 rounded-r-lg transition-colors">Rekonsiliasi</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="operational.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-cash-stack w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Operasional</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reports.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-file-earmark-bar-graph w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Laporan Keuangan</span>
+                    </a>
+                </li>
+                <div x-show="sidebarOpen" class="pt-6 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Data Master</div>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-building w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Sekolah</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="school-profile.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Profil Sekolah</a></li>
+                        <li><a href="school-data.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Tahun & Kelas</a></li>
+                    </ul>
+                </li>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-person-badge-fill w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Guru & Staff</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="teachers.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Guru</a></li>
+                        <li><a href="teacher-assignments.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Wali Kelas</a></li>
+                    </ul>
+                </li>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-people-fill w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Siswa & Wali</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="students.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Siswa</a></li>
+                        <li><a href="students-import.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Import Data</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="mt-auto px-2">
+                <a href="login.html" class="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 rounded-xl hover:bg-red-100 transition-all">
+                    <i class="bi bi-box-arrow-right text-lg"></i>
+                    <span x-show="sidebarOpen">KELUAR</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+            
+
+    <main class="pt-20 transition-all duration-300" :class="sidebarOpen ? 'ml-64' : 'ml-20'">
+        <div class="p-4 max-w-6xl mx-auto">
+            
+            <div class="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                <div>
+                    <span class="text-[10px] font-black uppercase text-blue-600 tracking-[0.2em] mb-2 block">Settlement & Reconciliation</span>
+                    <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none">Penyelarasan Data</h1>
+                    <p class="text-sm text-gray-400 mt-2 font-medium">Sinkronisasi transaksi bank dengan invoice sistem.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button @click="refreshData()" :disabled="isRefreshing" class="px-4 py-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-800 flex items-center shadow-sm disabled:opacity-50 transition-all">
+                        <i class="bi bi-arrow-clockwise mr-2 text-sm" :class="isRefreshing ? 'animate-spin' : ''"></i>
+                        <span x-text="isRefreshing ? 'Refreshing...' : 'Refresh'"></span>
+                    </button>
+                    <button @click="runAutomatch()" :disabled="isAutomatching" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-blue-200 dark:shadow-blue-900/40 relative overflow-hidden transition-all disabled:bg-blue-400 group">
+                        <span :class="isAutomatching ? 'opacity-0' : 'opacity-100'" class="flex items-center gap-2">
+                             <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                             Run Automatch
+                        </span>
+                        <div x-show="isAutomatching" class="absolute inset-0 flex items-center justify-center font-black tracking-tighter italic">
+                             MATCHING...
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Health Status -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="p-6 glass-card rounded-3xl shadow-sm relative overflow-hidden group">
+                     <div class="absolute right-0 top-0 p-4 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+                         <i class="bi bi-check-lg text-7xl text-blue-600"></i>
+                     </div>
+                     <p class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Matched (Synced)</p>
+                     <h3 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">542</h3>
+                     <div class="mt-3 flex items-center space-x-2">
+                         <span class="flex h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                         <p class="text-[10px] text-green-500 font-bold uppercase tracking-tighter">100% Accuracy Today</p>
+                     </div>
+                </div>
+                <div class="p-6 glass-card rounded-3xl shadow-sm relative overflow-hidden group border-b-4 border-b-yellow-400">
+                     <div class="absolute right-0 top-0 p-4 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+                         <i class="bi bi-exclamation-circle text-7xl text-yellow-500"></i>
+                     </div>
+                     <p class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Unmatched (Manual Check)</p>
+                     <h3 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">18</h3>
+                     <div class="mt-3 flex items-center space-x-2 animate-pulse">
+                         <span class="flex h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
+                         <p class="text-[10px] text-yellow-500 font-bold uppercase tracking-tighter italic">Perlu tindakan segera</p>
+                     </div>
+                </div>
+                <div class="p-6 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-xl shadow-blue-500/20 text-white relative overflow-hidden">
+                     <div class="absolute -right-2 -bottom-2 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                     <p class="text-[10px] font-black text-blue-100 uppercase tracking-widest mb-1 opacity-60">Estimated Settlement</p>
+                     <h3 class="text-3xl font-black tracking-tight">Rp 740.2M</h3>
+                     <p class="text-[10px] text-blue-100/80 font-bold mt-4 uppercase tracking-tighter leading-tight mt-4">Scheduled for disbursement tomorrow at 04:00 AM</p>
+                </div>
+            </div>
+
+            <!-- Reconciliation Table -->
+            <div class="glass-card rounded-[2.5rem] shadow-sm overflow-hidden mb-10">
+                <div class="p-8 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
+                     <div>
+                        <h2 class="font-black text-gray-900 dark:text-white uppercase tracking-[0.2em] text-xs">Transaksi Belum Ter-match</h2>
+                        <p class="text-[10px] text-gray-400 dark:text-slate-500 font-medium mt-1">Menampilkan data mutasi bank 24 jam terakhir</p>
+                     </div>
+                     <span class="text-[9px] font-black bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-500/20 tracking-widest uppercase">Batch #99212</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-50/50 dark:bg-white/[0.02] text-gray-400 dark:text-slate-500 font-black uppercase tracking-[0.15em]">
+                            <tr>
+                                <th class="px-8 py-5">TXN Date</th>
+                                <th class="px-8 py-5">TXID / Reference</th>
+                                <th class="px-8 py-5">Amount (Bank)</th>
+                                <th class="px-8 py-5">Payer Info (Raw)</th>
+                                <th class="px-8 py-5">Possible Match</th>
+                                <th class="px-8 py-5 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                            <tr class="hover:bg-blue-50/30 dark:hover:bg-blue-400/[0.02] group transition-colors duration-300">
+                                <td class="px-8 py-6 font-medium text-gray-500 dark:text-slate-400 tracking-tight">11 Feb, 10:45</td>
+                                <td class="px-8 py-6">
+                                    <div class="font-bold text-gray-900 dark:text-white">BR-VA-990812</div>
+                                    <div class="text-[9px] text-gray-400 dark:text-slate-500 font-medium tracking-tight mt-0.5">BCA Virtual Account</div>
+                                </td>
+                                <td class="px-8 py-6 font-black text-gray-900 dark:text-white italic text-lg">Rp 1.550.000</td>
+                                <td class="px-8 py-6">
+                                    <div class="px-3 py-2 bg-gray-50 dark:bg-white/[0.03] rounded-lg text-[10px] font-mono text-gray-500 dark:text-slate-400 uppercase border border-gray-100 dark:border-white/5">TRANSFER DARI: "ANDI W"</div>
+                                </td>
+                                <td class="px-8 py-6 text-sm">
+                                    <div class="flex items-center text-blue-600 dark:text-blue-400">
+                                        <div class="w-2 h-2 rounded-full bg-blue-500 mr-2 shadow-sm shadow-blue-500/50"></div>
+                                        <span class="font-bold border-b border-dashed border-blue-400/50 cursor-help">Andi Wijaya (X-1)</span>
+                                    </div>
+                                    <div class="text-[9px] text-gray-400 dark:text-slate-500 font-bold mt-1.5 uppercase tracking-wider">95% Match Score</div>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <button @click="showMatchProgress = true; setTimeout(() => { showMatchProgress = false; isMatched = true }, 2000)" 
+                                            x-data="{ showMatchProgress: false, isMatched: false }"
+                                            :disabled="isMatched"
+                                            class="px-5 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95 shadow-lg"
+                                            :class="isMatched ? 'bg-emerald-100 text-emerald-700 shadow-emerald-100' : 'bg-gray-900 dark:bg-blue-600 text-white shadow-gray-200 dark:shadow-blue-900/20'">
+                                        <template x-if="!showMatchProgress && !isMatched">
+                                            <span>Match Now</span>
+                                        </template>
+                                        <template x-if="showMatchProgress">
+                                            <span class="flex items-center">
+                                                <i class="bi bi-arrow-repeat animate-spin mr-2"></i> Matching
+                                            </span>
+                                        </template>
+                                        <template x-if="isMatched">
+                                            <span class="flex items-center">
+                                                <i class="bi bi-check-circle-fill mr-1.5"></i> Done
+                                            </span>
+                                        </template>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-red-50/30 dark:hover:bg-red-400/[0.02] group transition-colors duration-300">
+                                <td class="px-8 py-6 font-medium text-gray-500 dark:text-slate-400 tracking-tight">11 Feb, 09:12</td>
+                                <td class="px-8 py-6">
+                                    <div class="font-bold text-gray-900 dark:text-white">QR-PAY-11228</div>
+                                    <div class="text-[9px] text-gray-400 dark:text-slate-500 font-medium tracking-tight mt-0.5">QRIS Static Bank Jateng</div>
+                                </td>
+                                <td class="px-8 py-6 font-black text-red-600 dark:text-red-400 italic text-lg">Rp 88.000</td>
+                                <td class="px-8 py-6">
+                                    <div class="px-3 py-2 bg-gray-50 dark:bg-white/[0.03] rounded-lg text-[10px] font-mono text-gray-500 dark:text-slate-400 uppercase border border-gray-100 dark:border-white/5">"WALIMURID KAN..."</div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center text-red-400/80">
+                                        <i class="bi bi-exclamation-triangle-fill mr-1.5"></i>
+                                        <span class="font-black uppercase text-[9px] tracking-widest">No match found</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <button @click="showManualFix = true; selectedTxn = 'QR-PAY-11228'" class="px-5 py-2 bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-slate-700">Manual Fix</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-orange-50/30 dark:hover:bg-orange-400/[0.02] group transition-colors duration-300">
+                                <td class="px-8 py-6 font-medium text-gray-500 dark:text-slate-400 tracking-tight">11 Feb, 08:30</td>
+                                <td class="px-8 py-6">
+                                    <div class="font-bold text-gray-900 dark:text-white">CSH-1002</div>
+                                    <div class="text-[9px] text-gray-400 dark:text-slate-500 font-medium tracking-tight mt-0.5">Cash Deposit</div>
+                                </td>
+                                <td class="px-8 py-6 font-black text-gray-900 dark:text-white italic text-lg">Rp 500.000</td>
+                                <td class="px-8 py-6">
+                                    <div class="px-3 py-2 bg-gray-50 dark:bg-white/[0.03] rounded-lg text-[10px] font-mono text-gray-500 dark:text-slate-400 uppercase border border-gray-100 dark:border-white/5">"TUNAI BENDAHARA"</div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center text-orange-500">
+                                        <i class="bi bi-question-circle mr-1.5"></i>
+                                        <span class="font-bold text-[9px] uppercase tracking-widest">Suspicious Entry</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <button @click="isInvestigating = true; setTimeout(() => { isInvestigating = false; investigated = true }, 2000)"
+                                            x-data="{ isInvestigating: false, investigated: false }"
+                                            :disabled="investigated"
+                                            class="px-4 py-2 border rounded-xl font-black text-[9px] uppercase tracking-widest transition-all duration-300 group-hover:opacity-100 opacity-0 shadow-sm"
+                                            :class="investigated ? 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-900/30 text-orange-600 dark:text-orange-400 opacity-100' : 'border-red-200 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white'">
+                                        <span x-show="!isInvestigating && !investigated">Investigate</span>
+                                        <span x-show="isInvestigating" class="flex items-center">
+                                            <i class="bi bi-arrow-repeat animate-spin mr-2"></i>Checking
+                                        </span>
+                                        <span x-show="investigated" class="flex items-center"><i class="bi bi-journal-check mr-1.5"></i>Logged</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settlement History Stub -->
+            <div class="bg-gray-900 rounded-3xl p-8 text-white relative overflow-hidden">
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h4 class="text-xl font-black mb-1">Riwayat Pencairan</h4>
+                        <p class="text-sm text-gray-400 font-medium italic">Dana yang sudah ditransfer ke Rekening Sekolah.</p>
+                    </div>
+                    <button @click="showSettlementHistory = true" class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-xs font-bold uppercase tracking-widest transition border border-white/5">Lihat Semua Settlement</button>
+                </div>
+                <!-- Mini items -->
+                <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <p class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-2">10 FEB 2026</p>
+                        <p class="text-lg font-black leading-none">Rp 230.120.500</p>
+                        <div class="flex items-center mt-2">
+                             <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></span>
+                             <span class="text-[10px] font-bold text-gray-400 uppercase">Success</span>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <p class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-2">09 FEB 2026</p>
+                        <p class="text-lg font-black leading-none">Rp 105.440.000</p>
+                        <div class="flex items-center mt-2">
+                             <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></span>
+                             <span class="text-[10px] font-bold text-gray-400 uppercase">Success</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- decor -->
+                <div class="absolute -right-16 -top-16 w-48 h-48 bg-blue-500 rounded-full blur-3xl opacity-20 capitalize"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Manual Fix -->
+    <div x-show="showManualFix" x-cloak class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="showManualFix" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 dark:bg-slate-900/80 backdrop-blur-sm transition-opacity" @click="showManualFix = false"></div>
+
+            <div x-show="showManualFix" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                 class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-slate-800">
+                <div class="p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight leading-none">Manual Reconciliation</h3>
+                            <p class="text-xs text-gray-500 mt-2 font-medium">Match transaction <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md font-mono text-[10px]" x-text="selectedTxn"></span> with an invoice.</p>
+                        </div>
+                        <button @click="showManualFix = false" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                            <i class="bi bi-x-lg text-gray-400"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3">Search Invoice / Student</label>
+                            <div class="relative group">
+                                <input type="text" placeholder="Type name or invoice ID..." class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors">
+                                    <i class="bi bi-search text-lg"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50/50 dark:bg-blue-500/5 p-5 rounded-3xl border border-blue-100/50 dark:border-blue-500/20">
+                            <h4 class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4">AI Recommended Match</h4>
+                            <div class="flex items-center justify-between group cursor-pointer hover:bg-white dark:hover:bg-slate-800 p-3 rounded-2xl transition-all shadow-sm hover:shadow-md border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30">
+                                <div class="flex items-center">
+                                    <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ring-4 ring-white dark:ring-slate-900 mr-4 shadow-lg shadow-blue-200 dark:shadow-none">KW</div>
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">Kurniawan Widjaja</p>
+                                        <p class="text-[10px] text-gray-500 dark:text-slate-400 font-medium mt-0.5">INV-2026-0012 â€¢ <span class="font-bold text-gray-900 dark:text-white">Rp 88.000</span></p>
+                                    </div>
+                                </div>
+                                <div class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                                    <i class="bi bi-check-lg"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex gap-3">
+                        <button @click="showManualFix = false" class="flex-1 px-6 py-4 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-slate-700 transition-all">Cancel</button>
+                        <button @click="showManualFix = false" class="flex-1 px-6 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-200 dark:shadow-blue-900/40 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all">Finalize Selection</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Riwayat Settlement -->
+    <div x-show="showSettlementHistory" x-cloak class="fixed inset-0 z-[110] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div x-show="showSettlementHistory" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-opacity" @click="showSettlementHistory = false"></div>
+
+            <div x-show="showSettlementHistory" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                 class="relative bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden border border-white/20">
+                
+                <div class="px-8 pt-8 pb-6 flex justify-between items-center bg-gray-50/50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
+                    <div>
+                        <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Riwayat Lengkap Settlement</h3>
+                        <p class="text-xs text-gray-500 font-medium mt-1">Daftar pencairan dana otomatis ke rekening sekolah.</p>
+                    </div>
+                    <button @click="showSettlementHistory = false" class="p-3 bg-white dark:bg-slate-800 shadow-sm border border-gray-100 dark:border-white/10 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all active:scale-95">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="p-0 max-h-[60vh] overflow-y-auto hide-scrollbar">
+                    <table class="w-full text-left">
+                        <thead class="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 border-b border-gray-100 dark:border-white/5">
+                            <tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <th class="px-8 py-4">Tanggal & Batch</th>
+                                <th class="px-8 py-4">Status</th>
+                                <th class="px-8 py-4 text-right">Nominal Pencairan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                            <template x-for="i in [1,2,3,4,5,6,7,8]">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                                    <td class="px-8 py-5">
+                                        <div class="font-bold text-gray-900 dark:text-white" x-text="'1' + i + ' Feb 2026'"></div>
+                                        <div class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5" x-text="'BATCH-S77' + i"></div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20">
+                                            <span class="w-1 h-1 rounded-full bg-emerald-500 mr-1.5"></span> Success
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-5 text-right font-black text-gray-900 dark:text-white" x-text="'Rp 1' + i + '.500.000'"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-8 bg-gray-50 dark:bg-white/[0.02] border-t border-gray-100 dark:border-white/5 flex justify-between items-center">
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Menampilkan 8 Settlement Terakhir</div>
+                    <button class="px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 dark:shadow-blue-900/20 hover:bg-blue-700 transition-all">Download CSV Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

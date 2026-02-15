@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akses Cepat - Schoolhub Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-indigo-600 dark:bg-slate-950 min-h-screen flex items-center justify-center p-6">
+
+    
+    <div class="w-full max-w-sm text-center">
+        <div class="mb-12" data-aos="fade-down">
+            <h1 class="text-3xl font-black italic uppercase tracking-tighter text-white mb-2">Welcome Back.</h1>
+            <p class="text-indigo-200 text-xs font-black uppercase tracking-[0.3em] opacity-60">Admin Sekolah Portal</p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden" data-aos="zoom-in">
+            <!-- Profile Info -->
+            <div class="mb-10">
+                <div class="w-24 h-24 mx-auto bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 border-4 border-white dark:border-slate-950 shadow-lg relative overflow-hidden group">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4" alt="Avatar" class="w-full h-full object-cover">
+                </div>
+                <h3 class="text-lg font-black text-slate-900 dark:text-white italic uppercase">Budi Santoso</h3>
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Head of Administration</p>
+            </div>
+
+            <!-- PIN/Pass Section -->
+            <form action="index.html" class="space-y-6">
+                <div class="relative">
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">Masukkkan PIN Keamanan</label>
+                    <div class="flex justify-center space-x-3">
+                        <input type="password" maxlength="1" class="w-12 h-16 bg-slate-50 dark:bg-slate-950 text-center text-2xl font-black text-indigo-600 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all" value="•">
+                        <input type="password" maxlength="1" class="w-12 h-16 bg-slate-50 dark:bg-slate-950 text-center text-2xl font-black text-indigo-600 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all" value="•">
+                        <input type="password" maxlength="1" class="w-12 h-16 bg-slate-50 dark:bg-slate-950 text-center text-2xl font-black text-indigo-600 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all" value="•">
+                        <input type="password" maxlength="1" class="w-12 h-16 bg-slate-50 dark:bg-slate-950 text-center text-2xl font-black text-indigo-600 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all" placeholder="0">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-900 transform hover:scale-[1.02] transition-all shadow-xl shadow-indigo-200 dark:shadow-none italic tracking-[0.2em]">
+                    Unlock Dashboard
+                </button>
+            </form>
+
+            <div class="mt-8 pt-8 border-t border-slate-50 dark:border-slate-800">
+                <div class="flex items-center justify-between">
+                    <button class="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:opacity-70 transition-all italic flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-4.44-5.026c1.123-1.477 1.946-3.216 2.376-5.122m3.655-3.655a9 9 0 11-1.414 1.414L20 20"></path></svg>
+                        Biometrik
+                    </button>
+                    <a href="login.html" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors italic">Bukan Budi?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800 });
+    </script>
+</body>
+</html>
+
+

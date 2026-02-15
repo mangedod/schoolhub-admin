@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Billing Sekolah - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        [x-cloak] { display: none !important; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Flatpickr Premium Glass Design */
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            border-radius: 1.25rem !important;
+            box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.15) !important;
+            padding: 12px !important;
+            width: 315px !important;
+        }
+
+        /* Dark Mode Specifics */
+        html.dark .flatpickr-calendar {
+            background: rgba(15, 23, 42, 0.95) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .flatpickr-months { background: transparent !important; }
+        .flatpickr-months .flatpickr-month { height: 50px !important; color: #1e293b !important; fill: #1e293b !important; }
+        html.dark .flatpickr-months .flatpickr-month,
+        html.dark .flatpickr-current-month,
+        html.dark .flatpickr-monthDropdown-months,
+        html.dark .numInputWrapper span {
+            color: white !important;
+            fill: white !important;
+        }
+
+        .flatpickr-current-month .flatpickr-monthDropdown-months { font-weight: 800 !important; text-transform: uppercase; letter-spacing: 1px; }
+        .flatpickr-weekday { font-size: 10px !important; font-weight: 800 !important; text-transform: uppercase; color: #94a3b8 !important; }
+        html.dark .flatpickr-weekday { color: #64748b !important; }
+
+        .flatpickr-day {
+            border-radius: 10px !important;
+            margin: 2px !important;
+            transition: all 0.2s ease;
+            color: #475569 !important;
+            height: 35px !important;
+            line-height: 35px !important;
+        }
+        html.dark .flatpickr-day { color: #cbd5e1 !important; }
+        
+        .flatpickr-day.today { border-color: #3b82f6 !important; color: #3b82f6 !important; background: rgba(59, 130, 246, 0.05); }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(59, 130, 246, 0.1) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            color: #2563eb !important;
+        }
+        html.dark .flatpickr-day.inRange {
+            background: rgba(37, 99, 235, 0.2) !important;
+            color: #93c5fd !important;
+        }
+        .flatpickr-day:hover { background: rgba(59, 130, 246, 0.1) !important; }
+        html.dark .flatpickr-day:hover { background: rgba(255, 255, 255, 0.1) !important; }
+
+        .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+            top: 10px !important;
+            padding: 10px !important;
+            color: #3b82f6 !important;
+            fill: #3b82f6 !important;
+        }
+        html.dark .flatpickr-months .flatpickr-prev-month, 
+        html.dark .flatpickr-months .flatpickr-next-month {
+            color: white !important;
+            fill: white !important;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 1rem;
+        }
+        
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .side-gradient {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0) 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-slate-100 font-sans" x-data="{ sidebarOpen: true, modalOpen: false, reportModalOpen: false, withdrawModalOpen: false, installmentModalOpen: false, colorMode: localStorage.getItem('color-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') }">
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 z-50 w-full h-16 glass-nav flex items-center justify-between px-6 shadow-sm">
+        <div class="flex items-center justify-start">
+            <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-xl transition-colors">
+                <i class="bi bi-list text-2xl"></i>
+            </button>
+            <a href="#" class="flex ml-4 items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                    <span class="font-bold text-sm">E</span>
+                </div>
+                <span class="self-center text-lg font-bold whitespace-nowrap text-gray-800 dark:text-white">Schoolhub <span class="text-blue-600">Admin</span></span>
+            </a>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Theme Toggle -->
+            <button @click="document.documentElement.classList.toggle('dark'); colorMode = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; localStorage.setItem('color-theme', colorMode)" 
+                class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 transition-colors">
+                <i x-show="colorMode === 'light'" class="bi bi-moon-stars text-lg"></i>
+                <i x-show="colorMode === 'dark'" class="bi bi-sun-fill text-lg text-yellow-400"></i>
+            </button>
+            <div class="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-slate-800">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-semibold text-gray-800 dark:text-white leading-none mb-1">Budi Santoso</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Bendahara</p>
+                </div>
+                <img class="w-8 h-8 rounded-full border border-gray-200 dark:border-slate-700" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Budi" alt="avatar" />
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 h-screen pt-16 transition-all duration-300 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800" :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full sm:w-20 sm:translate-x-0'" aria-label="Sidebar">
+        <div class="h-full px-3 py-4 overflow-y-auto hide-scrollbar side-gradient flex flex-col">
+            <ul class="space-y-1 font-medium">
+                <li>
+                    <a href="index.html" class="flex items-center p-2.5 rounded-xl transition-all group text-blue-600 bg-blue-50/50 dark:bg-blue-900/20 font-bold shadow-lg shadow-blue-500/10">
+                        <i class="bi bi-grid-fill w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Dashboard</span>
+                    </a>
+                </li>
+                <div x-show="sidebarOpen" class="pt-6 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Keuangan</div>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-wallet2 w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Billing Sistem</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="billing-activation.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Aktivasi Billing</a></li>
+                        <li><a href="billing-master.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Tagihan</a></li>
+                        <li><a href="billing-generate.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Generate Tagihan</a></li>
+                        <li><a href="billing-invoice.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Invoice & Penagihan</a></li>
+                        <li><a href="billing-arrears.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Tunggakan & Reminder</a></li>
+                        <li><a href="billing-reconciliation.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Rekonsiliasi</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="operational.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-cash-stack w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Operasional</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reports.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-file-earmark-bar-graph w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Laporan Keuangan</span>
+                    </a>
+                </li>
+                <div x-show="sidebarOpen" class="pt-6 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Data Master</div>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-building w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Sekolah</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="school-profile.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Profil Sekolah</a></li>
+                        <li><a href="school-data.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Tahun & Kelas</a></li>
+                    </ul>
+                </li>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-person-badge-fill w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Guru & Staff</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="teachers.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Guru</a></li>
+                        <li><a href="teacher-assignments.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Wali Kelas</a></li>
+                    </ul>
+                </li>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-people-fill w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Siswa & Wali</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="students.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Siswa</a></li>
+                        <li><a href="students-import.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Import Data</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="mt-auto px-2">
+                <a href="login.html" class="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 rounded-xl hover:bg-red-100 transition-all">
+                    <i class="bi bi-box-arrow-right text-lg"></i>
+                    <span x-show="sidebarOpen">KELUAR</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+                
+
+    <!-- Main Content -->
+    <main class="transition-all duration-300 pt-24 px-6 pb-12 min-h-screen" :class="sidebarOpen ? 'lg:ml-64' : 'ml-0 sm:ml-20'">
+        
+        <!-- Welcome Header -->
+        <div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-gray-800 dark:text-white">Statistik Keuangan</h1>
+                <p class="text-gray-500 font-medium mt-1 text-sm uppercase tracking-wider">Tahun Ajaran 2023/2024 â€¢ Semester Ganjil</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button @click="reportModalOpen = true" class="px-5 py-2.5 glass-card rounded-xl text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-white/90 transition-all flex items-center gap-2">
+                    <i class="bi bi-file-earmark-pdf text-red-500"></i>
+                    Laporan PDF
+                </button>
+                <button @click="modalOpen = true" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center gap-2 text-sm">
+                    <i class="bi bi-plus-lg"></i>
+                    Buat Tagihan
+                </button>
+            </div>
+        </div>
+
+        <!-- A. Summary Widgets -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <!-- Stat 1 -->
+            <div class="glass-card p-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150"></div>
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Total Piutang (Bulan Ini)</p>
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Rp 1.250.000.000</h3>
+                <div class="flex items-center gap-1.5 mt-2 text-xs">
+                    <span class="font-bold text-green-500">â†‘ 12%</span>
+                    <span class="text-gray-400">dibanding Jan</span>
+                </div>
+            </div>
+            <!-- Stat 2 -->
+            <div class="glass-card p-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150"></div>
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Pembayaran Terverifikasi</p>
+                <h3 class="text-2xl font-bold text-emerald-600">Rp 850.400.000</h3>
+                <div x-data="{ width: 0 }" x-init="setTimeout(() => width = 68, 200)" class="w-full bg-gray-100 dark:bg-slate-800 h-1.5 rounded-full mt-4">
+                    <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-1000 ease-out" :style="`width: ${width}%`" style="width: 0%"></div>
+                </div>
+            </div>
+            <!-- Stat 3 -->
+            <div class="glass-card p-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150"></div>
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Total Tunggakan</p>
+                <h3 class="text-2xl font-bold text-rose-500">Rp 399.600.000</h3>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="px-2 py-0.5 bg-red-50 dark:bg-red-900/10 text-red-500 text-[10px] font-bold rounded-full">KRITIS</span>
+                    <span class="text-[11px] text-gray-400">120+ Siswa</span>
+                </div>
+            </div>
+            <!-- Stat 4 -->
+            <div class="glass-card p-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150"></div>
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Lunas Sempurna</p>
+                <h3 class="text-4xl font-bold text-blue-600 leading-none">68.2<span class="text-xl">%</span></h3>
+                <p class="text-[10px] text-gray-400 mt-2 font-semibold">Terdapat kenaikan 4%</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Col: Aging & Table -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Aging Table -->
+                <div class="glass-card overflow-hidden">
+                    <div class="p-5 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-gray-800 dark:text-white">Rekap Tunggakan per Durasi</h2>
+                        <a href="billing-arrears.html" class="text-xs font-semibold text-blue-600 hover:tracking-widest transition-all">Lihat Semua &rarr;</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50/50 dark:bg-slate-800/50 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                <tr>
+                                    <th class="px-6 py-4">Kategori Durasi</th>
+                                    <th class="px-6 py-4 text-center">Jumlah Siswa</th>
+                                    <th class="px-6 py-4 text-right">Nilai Tunggakan</th>
+                                    <th class="px-6 py-4 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors text-sm">
+                                    <td class="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                            Normal ( < 15 Hari)
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-gray-500">1,890</td>
+                                    <td class="px-6 py-4 text-right font-bold text-gray-800 dark:text-white">Rp 120.0M</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <a href="billing-arrears.html" class="text-blue-600 font-bold text-xs hover:text-blue-700 uppercase">Detail</a>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors text-sm">
+                                    <td class="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                                            Warning (15-30 Hari)
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-gray-500">456</td>
+                                    <td class="px-6 py-4 text-right font-bold text-gray-800 dark:text-white">Rp 180.0M</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="px-3 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold rounded-xl uppercase">WA Blast</button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors text-sm">
+                                    <td class="px-6 py-4 font-bold text-red-500">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
+                                            Macet ( > 30 Hari)
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-gray-400">110</td>
+                                    <td class="px-6 py-4 text-right font-bold text-red-600">Rp 99.6M</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="px-3 py-1 bg-red-600 text-white text-[10px] font-bold rounded-xl uppercase">Eskalasi</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Timeline / Log -->
+                <div class="glass-card p-6">
+                    <div class="flex items-center justify-between mb-8">
+                        <h2 class="text-lg font-bold text-gray-800 dark:text-white uppercase tracking-tight">Log Transaksi Berjalan</h2>
+                        <span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[10px] font-bold rounded-full animate-pulse">LIVE TRACKING</span>
+                    </div>
+                    
+                    <div class="space-y-8">
+                        <div class="flex gap-4 relative">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 shrink-0">
+                                <i class="bi bi-check2-circle text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-[13px] font-bold text-gray-800 dark:text-white">Pembayaran Sukses (VA BRI)</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Andi Wijaya (12-A) - Rp 750.000 lunas SPP Maret.</p>
+                                <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest border-l-2 border-blue-500 pl-2">Baru saja â€¢ INV-9812</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 relative">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 shrink-0">
+                                <i class="bi bi-megaphone text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-[13px] font-bold text-gray-800 dark:text-white">Batch Invoice Diterbitkan</p>
+                                <p class="text-xs text-gray-500 mt-0.5">2,450 Tagihan SPP Maret telah dikirimkan via Email & WA.</p>
+                                <p class="text-[10px] text-gray-400 mt-2 font-bold tracking-widest pl-2">14:05 WIB â€¢ SPP-MARCH</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Col: Wallet & Metrik -->
+            <div class="space-y-8">
+                <!-- Wallet Card -->
+                <div class="bg-blue-600 p-8 rounded-2xl text-white relative overflow-hidden group shadow-xl shadow-blue-500/20">
+                    <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-white/10 rounded-full blur-[80px]"></div>
+                    <div class="relative z-10">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-4 flex items-center gap-2">
+                             Saldo Tersedia
+                        </p>
+                        <h4 class="text-4xl font-extrabold mb-1 tracking-tight">Rp 2.40<span class="text-xl">B</span></h4>
+                        <p class="text-[10px] font-medium opacity-70 mb-8 border-l border-white/30 pl-3 italic">Pencairan terakhir: 10 Feb, 09:00 WIB</p>
+                        
+                        <div class="space-y-3 font-bold">
+                            <button @click="withdrawModalOpen = true" class="w-full py-3 bg-white text-blue-600 text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-50 transition-all shadow-lg active:scale-95">TARIK SALDO</button>
+                            <a href="billing-reconciliation.html" class="block w-full py-2 text-center text-white/70 text-[10px] uppercase hover:text-white transition-colors">Lihat Mutasi Transaksi</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats/Metrik -->
+                <div class="glass-card p-6">
+                    <h2 class="text-sm font-bold uppercase tracking-widest mb-6 text-gray-500 dark:text-gray-400">Metrik Performa</h2>
+                    
+                    <div class="space-y-6">
+                        <div x-data="{ width: 0 }" x-init="setTimeout(() => width = 92.4, 500)">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight">Penagihan SPP</span>
+                                <span class="text-sm font-bold text-blue-600">92.4%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div class="bg-blue-600 h-full rounded-full transition-all duration-1000 ease-out" :style="`width: ${width}%`" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div x-data="{ width: 0 }" x-init="setTimeout(() => width = 88.0, 800)">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight">PPDB Online</span>
+                                <span class="text-sm font-bold text-emerald-500">88.0%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000 ease-out" :style="`width: ${width}%`" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Promo -->
+                <div class="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-2xl shadow-lg shadow-orange-500/20 text-white cursor-pointer group hover:scale-[1.02] transition-all">
+                    <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center mb-4">
+                        <i class="bi bi-lightning-charge-fill text-xl text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Fitur Cicilan</h3>
+                    <p class="text-xs opacity-90 mb-6 leading-relaxed">Berikan keringanan wali murid dengan sistem cicilan otomatis yang aman.</p>
+                    <button @click="installmentModalOpen = true" class="w-full py-2.5 bg-white text-orange-600 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-orange-50 transition-all active:scale-95">AKTIFKAN SEKARANG</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Laporan PDF -->
+    <div x-show="reportModalOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm"
+         x-cloak>
+        
+        <div @click.away="reportModalOpen = false" 
+             x-show="reportModalOpen"
+             x-data="{ 
+                activeShortcut: '',
+                setRange(type) {
+                    this.activeShortcut = type;
+                    const d = new Date();
+                    let start, end;
+                    if (type === 'today') {
+                        start = new Date();
+                        end = new Date();
+                    } else if (type === 'week') {
+                        const day = d.getDay();
+                        const first = d.getDate() - day + (day == 0 ? -6 : 1);
+                        start = new Date(d.setDate(first));
+                        end = new Date(d.setDate(first + 6));
+                    } else if (type === 'month') {
+                        start = new Date(d.getFullYear(), d.getMonth(), 1);
+                        end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+                    }
+                    // Gunakan false agar tidak memicu event onChange yang me-reset activeShortcut
+                    window.reportPicker.setDate([start, end], false);
+                }
+             }"
+             @reset-shortcut.window="activeShortcut = ''"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="glass-card w-full max-w-sm overflow-hidden shadow-2xl">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white uppercase tracking-tight">Export Laporan PDF</h3>
+                <button @click="reportModalOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-5 space-y-4">
+                <!-- Shortcuts -->
+                <div class="flex flex-wrap gap-2">
+                    <button @click="setRange('today')" 
+                        :class="activeShortcut === 'today' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 border-gray-100 dark:border-slate-700'"
+                        class="px-3 py-1.5 text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all border">Hari Ini</button>
+                    <button @click="setRange('week')" 
+                        :class="activeShortcut === 'week' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 border-gray-100 dark:border-slate-700'"
+                        class="px-3 py-1.5 text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all border">Minggu Ini</button>
+                    <button @click="setRange('month')" 
+                        :class="activeShortcut === 'month' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 border-gray-100 dark:border-slate-700'"
+                        class="px-3 py-1.5 text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all border">Bulan Ini</button>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1" @click="activeShortcut = ''">Pilih Rentang Waktu</label>
+                    <div class="relative group">
+                        <input type="text" id="datePicker" class="w-full bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer group-hover:border-blue-400 shadow-inner" placeholder="Pilih tanggal awal - akhir...">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none group-hover:scale-110 transition-transform">
+                            <i class="bi bi-calendar-range text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-blue-500/5 to-transparent dark:from-blue-500/10 rounded-xl border-l-4 border-blue-500">
+                    <p class="text-[11px] text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
+                        <span class="text-blue-600 dark:text-blue-400 font-bold">INFO:</span> Data laporan akan mencakup seluruh transaksi VA, Mutasi Bank, dan Cash sesuai periode yang dipilih.
+                    </p>
+                </div>
+
+                <!-- Footer Actions -->
+                <button @click="reportModalOpen = false; alert('Laporan sedang diproses...')" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-blue-500/50 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 group">
+                    <i class="bi bi-file-earmark-pdf text-lg group-hover:animate-bounce"></i>
+                    Generate & Unduh PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buat Tagihan -->
+    <div x-show="modalOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm"
+         x-cloak>
+        
+        <div @click.away="modalOpen = false" 
+             x-show="modalOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="glass-card w-full max-w-lg overflow-hidden shadow-2xl">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white uppercase tracking-tight">Buat Tagihan Baru</h3>
+                <button @click="modalOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form class="p-6 space-y-5">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">Jenis Tagihan</label>
+                    <select class="w-full bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        <option>SPP Bulanan</option>
+                        <option>Uang Gedung</option>
+                        <option>Kegiatan Siswa</option>
+                        <option>Lain-lain</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">Target Kelas</label>
+                        <select class="w-full bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            <option>Semua Kelas</option>
+                            <option>Kelas 10</option>
+                            <option>Kelas 11</option>
+                            <option>Kelas 12</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">Bulan Tagihan</label>
+                        <input type="month" class="w-full bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">Nominal (Rp)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">Rp</span>
+                        <input type="number" placeholder="0" class="w-full bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl pl-12 pr-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">Keterangan (Opsional)</label>
+                    <textarea rows="2" class="w-full bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Contoh: Tagihan SPP Maret 2024"></textarea>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="pt-4 flex gap-3">
+                    <button type="button" @click="modalOpen = false" class="flex-1 py-3 text-gray-500 text-xs font-bold uppercase tracking-widest hover:text-gray-700 dark:hover:text-white transition-colors">Batal</button>
+                    <button type="submit" class="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all text-xs uppercase tracking-widest">Generate Tagihan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tarik Saldo -->
+    <div x-show="withdrawModalOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm"
+         x-cloak>
+        
+        <div @click.away="withdrawModalOpen = false" 
+             x-show="withdrawModalOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="glass-card w-full max-w-sm overflow-hidden shadow-2xl">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white uppercase tracking-tight">Tarik Dana Sekolah</h3>
+                <button @click="withdrawModalOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form class="p-6 space-y-4" @submit.prevent="withdrawModalOpen = false; alert('Permintaan pencairan dana sebesar Rp ' + document.getElementById('withdrawAmount').value + ' sedang diproses ke Rekening Utama Sekolah.')">
+                <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Rekening Tujuan</p>
+                    <p class="text-sm font-bold text-gray-800 dark:text-white">BANK MANDIRI - 1230006789XX</p>
+                    <p class="text-[10px] text-gray-400">YAYASAN PENDIDIKAN MANDIRI</p>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">Nominal Penarikan</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">Rp</span>
+                        <input type="number" id="withdrawAmount" required placeholder="0" class="w-full bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl pl-12 pr-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-2 italic">Maksimal penarikan: Rp 2.400.000.000</p>
+                </div>
+
+                <!-- Footer Actions -->
+                <button type="submit" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all text-xs uppercase tracking-widest active:scale-95">Konfirmasi Penarikan</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Aktivasi Cicilan -->
+    <div x-show="installmentModalOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md"
+         x-cloak>
+        
+        <div @click.away="installmentModalOpen = false" 
+             x-show="installmentModalOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-8"
+             class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/20">
+            
+            <div class="relative h-32 bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center overflow-hidden">
+                <div class="absolute inset-0 opacity-10">
+                    <svg class="w-full h-full" fill="currentColor" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 100 C 20 0 50 0 100 100 Z"></path></svg>
+                </div>
+                <div class="w-16 h-16 bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center shadow-xl">
+                    <i class="bi bi-lightning-charge-fill text-3xl text-white"></i>
+                </div>
+                <button @click="installmentModalOpen = false" class="absolute top-6 right-6 p-2 bg-black/10 hover:bg-black/20 rounded-full text-white transition-colors">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
+            </div>
+
+            <div class="p-8">
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight mb-2">Aktifkan Fitur Cicilan</h3>
+                    <p class="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">Berikan fleksibilitas pembayaran bagi wali murid dengan sistem angsuran otomatis melalui Virtual Account & QRIS.</p>
+                </div>
+
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-start space-x-4 p-4 rounded-2xl bg-orange-50 dark:bg-orange-500/5 border border-orange-100 dark:border-orange-500/10">
+                        <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1 shadow-lg shadow-orange-500/20">
+                            <i class="bi bi-check-circle-fill text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-900 dark:text-white text-sm">Automasi Tagihan</p>
+                            <p class="text-xs text-gray-500 dark:text-slate-400">Sistem akan membagi total tagihan menjadi beberapa termin secara otomatis.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10">
+                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-1 shadow-lg shadow-blue-500/20">
+                            <i class="bi bi-cash-stack text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-900 dark:text-white text-sm">Biaya Transaksi Flat</p>
+                            <p class="text-xs text-gray-500 dark:text-slate-400">Biaya admin tetap Rp 2.500 per termin pembayaran cicilan.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3 mb-8">
+                    <input type="checkbox" id="agree" class="w-5 h-5 rounded-md border-gray-300 dark:border-slate-700 text-orange-500 focus:ring-orange-500 dark:bg-slate-800">
+                    <label for="agree" class="text-xs text-gray-500 dark:text-slate-400 font-medium">Saya menyetujui syarat dan ketentuan aktivasi fitur cicilan.</label>
+                </div>
+
+                <button @click="installmentModalOpen = false; alert('Fitur Cicilan sedang dalam proses aktivasi oleh tim compliance.')" class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-[1.2rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-orange-500/30 hover:scale-[1.02] active:scale-95 transition-all">Submit Aktivasi</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Flatpickr for Range selection
+            window.reportPicker = flatpickr("#datePicker", {
+                mode: "range",
+                dateFormat: "d M Y",
+                prevArrow: '<i class="bi bi-chevron-left text-blue-600"></i>',
+                nextArrow: '<i class="bi bi-chevron-right text-blue-600"></i>',
+                onReady: function(selectedDates, dateStr, instance) {
+                    instance.calendarContainer.classList.add('glass-card');
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    // Reset visual shortcut if manually changed
+                    window.dispatchEvent(new CustomEvent('reset-shortcut'));
+                }
+            });
+
+            // Re-render check for dark mode
+            if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>

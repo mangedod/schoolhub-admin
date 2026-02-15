@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Sekolah - Schoolhub Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 1rem;
+        }
+        
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .side-gradient {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0) 100%);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-slate-100 font-sans" x-data="{ 
+    sidebarOpen: true, 
+    colorMode: localStorage.getItem('color-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+    isEditing: false,
+    showCertificate: false,
+    schoolName: 'SMA Negeri 1 Jakarta',
+    schoolNpsn: '20100234',
+    schoolEmail: 'info@sman1jakarta.sch.id',
+    schoolAccreditation: 'A',
+    coverImage: 'https://images.unsplash.com/photo-1620003048292-c4db88559488?q=80&w=1032&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    schoolLogo: 'https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg',
+    saveProfile() {
+        this.isEditing = false;
+        // Logic to simulate saving
+    },
+    changeCover() {
+        // Simulation for changing cover
+        let newImg = prompt('Enter new cover image URL:', this.coverImage);
+        if (newImg) this.coverImage = newImg;
+    },
+    changeLogo() {
+        // Simulation for changing logo
+        let newLogo = prompt('Enter new logo image URL:', this.schoolLogo);
+        if (newLogo) this.schoolLogo = newLogo;
+    }
+}">
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 z-50 w-full h-16 glass-nav flex items-center justify-between px-6 shadow-sm">
+        <div class="flex items-center justify-start">
+            <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-xl transition-colors">
+                <i class="bi bi-list text-2xl"></i>
+            </button>
+            <a href="index.html" class="flex ml-4 items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                    <span class="font-bold text-sm">E</span>
+                </div>
+                <span class="self-center text-lg font-bold whitespace-nowrap text-gray-800 dark:text-white">Schoolhub <span class="text-blue-600">Admin</span></span>
+            </a>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Theme Toggle -->
+            <button @click="document.documentElement.classList.toggle('dark'); colorMode = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; localStorage.setItem('color-theme', colorMode)" 
+                class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 transition-colors">
+                <i x-show="colorMode === 'light'" class="bi bi-moon-stars"></i>
+                <i x-show="colorMode === 'dark'" class="bi bi-sun text-yellow-500"></i>
+            </button>
+            <div class="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-slate-800">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-semibold text-gray-800 dark:text-white leading-none mb-1">Budi Santoso</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Bendahara</p>
+                </div>
+                <img class="w-8 h-8 rounded-full border border-gray-200 dark:border-slate-700" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Budi" alt="avatar" />
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 h-screen pt-16 transition-all duration-300 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800" :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full sm:w-20 sm:translate-x-0'" aria-label="Sidebar">
+        <div class="h-full px-3 py-4 overflow-y-auto hide-scrollbar side-gradient flex flex-col">
+            <ul class="space-y-1 font-medium">
+                <li>
+                    <a href="index.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-grid-fill w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Dashboard</span>
+                    </a>
+                </li>
+                <div x-show="sidebarOpen" class="pt-6 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Keuangan</div>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-wallet2 w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Billing Sistem</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="billing-activation.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Aktivasi Billing</a></li>
+                        <li><a href="billing-master.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Tagihan</a></li>
+                        <li><a href="billing-generate.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Generate Tagihan</a></li>
+                        <li><a href="billing-invoice.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Invoice & Penagihan</a></li>
+                        <li><a href="billing-arrears.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Tunggakan & Reminder</a></li>
+                        <li><a href="billing-reconciliation.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Rekonsiliasi</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="operational.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-cash-stack w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Operasional</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reports.html" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="bi bi-file-earmark-bar-graph w-5 h-5 shrink-0 text-lg flex items-center justify-center"></i>
+                        <span class="ml-3 text-sm font-semibold" x-show="sidebarOpen">Laporan Keuangan</span>
+                    </a>
+                </li>
+                <div x-show="sidebarOpen" class="pt-6 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Data Master</div>
+                <li x-data="{ open: true }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-building w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Sekolah</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="school-profile.html" class="block py-2 px-6 text-[13px] text-blue-600 font-bold bg-blue-50/50 dark:bg-blue-900/20 rounded-r-lg transition-colors">Profil Sekolah</a></li>
+                        <li><a href="school-data.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Tahun & Kelas</a></li>
+                    </ul>
+                </li>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-person-badge-fill w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Guru & Staff</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="teachers.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Guru</a></li>
+                        <li><a href="teacher-assignments.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Wali Kelas</a></li>
+                    </ul>
+                </li>
+                <li x-data="{ open: false }">
+                    <button @click="sidebarOpen ? open = !open : (sidebarOpen = true, open = true)" class="flex items-center justify-between w-full p-2.5 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center">
+                            <i class="bi bi-people-fill w-5 h-5 shrink-0 group-hover:text-blue-600 transition-colors text-lg flex items-center justify-center"></i>
+                            <span class="ml-3 text-sm group-hover:text-gray-900 dark:group-hover:text-white" x-show="sidebarOpen">Siswa & Wali</span>
+                        </div>
+                        <i x-show="sidebarOpen" class="bi bi-chevron-down w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <ul x-show="open && sidebarOpen" x-cloak class="mt-1 space-y-1 ml-4 border-l border-gray-100 dark:border-slate-800">
+                        <li><a href="students.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Master Siswa</a></li>
+                        <li><a href="students-import.html" class="block py-2 px-6 text-[13px] text-gray-500 hover:text-blue-600 transition-colors">Import Data</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="mt-auto px-2">
+                <a href="login.html" class="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 rounded-xl hover:bg-red-100 transition-all">
+                    <i class="bi bi-box-arrow-right text-lg"></i>
+                    <span x-show="sidebarOpen">KELUAR</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+            
+
+    <main class="pt-20 transition-all duration-300" :class="sidebarOpen ? 'ml-64' : 'ml-20'">
+        <div class="p-4 max-w-5xl mx-auto">
+            
+            <!-- Profile Banner & Main Info -->
+            <div class="relative mb-8">
+                <!-- Banner Background -->
+                <div class="h-48 md:h-72 rounded-[2.5rem] relative overflow-hidden shadow-2xl bg-slate-200 dark:bg-slate-800">
+                    <!-- Background Image -->
+                    <img :src="coverImage" class="absolute inset-0 w-full h-full object-cover" alt="Cover Image">
+                    
+                    <!-- Overlay Gradient -->
+                    <div class="absolute inset-0 bg-black/20 group"></div>
+
+                    <!-- Decor (Dots & Blur) -->
+                    <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 24px 24px;"></div>
+                    <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <!-- Change Cover Button -->
+                    <div x-show="isEditing" class="absolute right-6 bottom-6 z-20">
+                        <button @click="changeCover()" class="px-4 py-2 bg-black/60 backdrop-blur-md border border-white/20 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black/80 transition-all flex items-center gap-2">
+                            <i class="bi bi-camera-fill"></i>
+                            Ganti Foto Sampul
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Profile Info Overlay -->
+                <div class="px-8 -mt-20 relative z-10 flex flex-col md:flex-row items-end gap-6">
+                    <div class="relative group">
+                        <div class="w-32 h-32 md:w-40 md:h-40 bg-white dark:bg-slate-900 rounded-[2.5rem] p-2 shadow-2xl border-4 border-white dark:border-slate-900 relative">
+                            <img class="w-full h-full object-contain rounded-[2rem]" :src="schoolLogo" alt="School Logo" />
+                            <button x-show="isEditing" @click="changeLogo()" class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="bi bi-camera-fill text-white text-2xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 pb-4">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight" x-text="schoolName"></h1>
+                                    <span class="px-3 py-1 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200/50">TERVERIFIKASI</span>
+                                </div>
+                                <p class="text-gray-500 dark:text-slate-400 font-medium flex items-center gap-2">
+                                    <i class="bi bi-geo-alt-fill text-blue-500"></i>
+                                    Jl. Budi Utomo No.7, Sawah Besar, Jakarta Pusat
+                                </p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="isEditing = !isEditing" class="px-6 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 shadow-sm">
+                                    <i x-show="!isEditing" class="bi bi-pencil-square"></i>
+                                    <span x-text="isEditing ? 'Cancel Edit' : 'Edit Profil'"></span>
+                                </button>
+                                <button x-show="isEditing" @click="saveProfile()" class="px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-200 dark:shadow-blue-900/40 hover:bg-blue-700 transition-all">
+                                    Simpan Perubahan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div class="p-6 glass-card shadow-sm border border-gray-100 dark:border-white/5 relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+                        <i class="bi bi-people-fill text-7xl text-blue-600"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Muri / Siswa</p>
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white">1,240</h3>
+                </div>
+                <div class="p-6 glass-card shadow-sm border border-gray-100 dark:border-white/5 relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+                        <i class="bi bi-person-workspace text-7xl text-indigo-600"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Guru & Staff</p>
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white">86</h3>
+                </div>
+                <div class="p-6 glass-card shadow-sm border border-gray-100 dark:border-white/5 relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+                        <i class="bi bi-grid-3x3-gap-fill text-7xl text-emerald-600"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Rombel / Kelas</p>
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white">36</h3>
+                </div>
+                <div class="p-6 glass-card shadow-sm border border-gray-100 dark:border-white/5 relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+                        <i class="bi bi-patch-check-fill text-7xl text-orange-600"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Akreditasi</p>
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white" x-text="'Grade ' + schoolAccreditation"></h3>
+                </div>
+            </div>
+
+            <!-- Detailed Forms -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column: Primary Details -->
+                <div class="lg:col-span-2 space-y-8">
+                    <div class="glass-card p-8 border border-gray-100 dark:border-white/5">
+                        <div class="flex items-center gap-3 mb-8">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                <i class="bi bi-info-circle-fill text-lg"></i>
+                            </div>
+                            <h3 class="text-lg font-black text-gray-900 dark:text-white tracking-tight">Identitas Dasar Sekolah</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Nama Instansi</label>
+                                    <input type="text" x-model="schoolName" :disabled="!isEditing" class="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-75 disabled:cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">NPSN</label>
+                                    <input type="text" x-model="schoolNpsn" :disabled="!isEditing" class="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-75 disabled:cursor-not-allowed">
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Email Official</label>
+                                    <input type="email" x-model="schoolEmail" :disabled="!isEditing" class="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-75 disabled:cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">No. Telepon</label>
+                                    <input type="text" value="(021) 3456789" :disabled="!isEditing" class="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-75 disabled:cursor-not-allowed">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Akreditasi Satpen</label>
+                                <select x-model="schoolAccreditation" :disabled="!isEditing" class="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-75 disabled:cursor-not-allowed appearance-none">
+                                    <option value="A">A (Sangat Baik)</option>
+                                    <option value="B">B (Baik)</option>
+                                    <option value="C">C (Cukup)</option>
+                                    <option value="Belum">Belum Terakreditasi</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Visi & Misi Utama</label>
+                                <textarea :disabled="!isEditing" rows="4" class="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-75 disabled:cursor-not-allowed">Menjadi pusat keunggulan dalam pembentukan generasi bangsa yang cerdas, berintegritas, dan berwawasan global berdasarkan iman dan takwa.</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leadership -->
+                    <div class="glass-card p-8 border border-gray-100 dark:border-white/5">
+                        <div class="flex items-center gap-3 mb-8">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                <i class="bi bi-person-badge-fill text-lg"></i>
+                            </div>
+                            <h3 class="text-lg font-black text-gray-900 dark:text-white tracking-tight">Pimpinan Instansi</h3>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-8 items-start">
+                             <div class="w-32 h-40 bg-gray-100 dark:bg-slate-800 rounded-3xl overflow-hidden relative group">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Principal" alt="Headmaster" class="w-full h-full object-cover">
+                                <div x-show="isEditing" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                    <i class="bi bi-camera text-white"></i>
+                                </div>
+                             </div>
+                             <div class="flex-1 space-y-4 w-full">
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Nama Kepala Sekolah</label>
+                                    <input type="text" value="Drs. H. Mulyadi, M.Pd" :disabled="!isEditing" class="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-75 disabled:cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">NIP / ID Pimpinan</label>
+                                    <input type="text" value="197203151998031004" :disabled="!isEditing" class="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-75 disabled:cursor-not-allowed">
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Documents & Settings -->
+                <div class="space-y-8">
+                    <!-- Verification Badge Card -->
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
+                        <div class="relative z-10">
+                            <i class="bi bi-shield-check text-4xl mb-4 block"></i>
+                            <h4 class="text-xl font-black mb-2 leading-tight">Status Verifikasi Sistem</h4>
+                            <p class="text-sm text-blue-100 mb-6 font-medium">Instansi ini telah diverifikasi oleh tim Schoolhub Official untuk operasional pembayaran digital.</p>
+                            <button @click="showCertificate = true" class="w-full py-3 bg-white/20 hover:bg-white/30 rounded-2xl text-[10px] font-black uppercase tracking-widest transition border border-white/20 backdrop-blur-sm">Lihat Sertifikat</button>
+                        </div>
+                        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                    </div>
+
+                    <!-- Digital Documents -->
+                    <div class="glass-card p-8 border border-gray-100 dark:border-white/5">
+                         <h4 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-6 border-b border-gray-100 dark:border-white/5 pb-4">Dokumen Legalitas</h4>
+                         <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border border-gray-100 dark:border-slate-800 group hover:border-blue-500 transition-all cursor-pointer">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[11px] font-bold text-gray-900 dark:text-white leading-tight">Izin Operasional.pdf</p>
+                                        <p class="text-[9px] text-gray-500 uppercase tracking-tighter">Updated: 10 Jan 2026</p>
+                                    </div>
+                                </div>
+                                <i class="bi bi-download text-gray-400 group-hover:text-blue-500"></i>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border border-gray-100 dark:border-slate-800 group hover:border-blue-500 transition-all cursor-pointer">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center">
+                                        <i class="bi bi-file-earmark-text-fill"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[11px] font-bold text-gray-900 dark:text-white leading-tight">SK_Akreditasi_A.pdf</p>
+                                        <p class="text-[9px] text-gray-500 uppercase tracking-tighter">Updated: 12 Nov 2025</p>
+                                    </div>
+                                </div>
+                                <i class="bi bi-download text-gray-400 group-hover:text-blue-500"></i>
+                            </div>
+                            <button class="w-full py-4 border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all">
+                                <i class="bi bi-plus-lg mr-2"></i> Tambah Dokumen
+                            </button>
+                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer / Copyright -->
+            <div class="mt-20 pb-10 text-center">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">Schoolhub Management System Premium v2.4.0</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Sertifikat -->
+    <div x-show="showCertificate" x-cloak class="fixed inset-0 z-[120] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <!-- Backdrop -->
+            <div x-show="showCertificate" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/90 backdrop-blur-xl transition-opacity" @click="showCertificate = false"></div>
+
+            <!-- Content -->
+            <div x-show="showCertificate" x-transition:enter="ease-out duration-500" x-transition:enter-start="opacity-0 scale-90 translate-y-10" x-transition:enter-end="opacity-100 scale-100 translate-y-0" x-transition:leave="ease-in duration-300" x-transition:leave-start="opacity-100 scale-100 translate-y-0" x-transition:leave-end="opacity-0 scale-90 translate-y-10" 
+                 class="relative max-w-4xl w-full">
+                
+                <!-- Close Button -->
+                <button @click="showCertificate = false" class="absolute -top-16 right-0 text-white hover:text-blue-400 transition-colors flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.3em]">
+                    Tutup <i class="bi bi-x-lg text-lg"></i>
+                </button>
+
+                <!-- Certificate Frame -->
+                <div class="bg-white p-2 shadow-[0_0_100px_rgba(59,130,246,0.3)] rounded-sm relative overflow-hidden">
+                    <div class="border-[16px] border-double border-blue-900 p-8 md:p-16 text-center relative">
+                        <div class="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
+                            <i class="bi bi-shield-check text-[40rem]"></i>
+                        </div>
+                        <div class="relative z-10 flex flex-col items-center">
+                            <div class="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mb-6 shadow-xl">
+                                <span class="text-white font-black text-2xl">E</span>
+                            </div>
+                            <h2 class="text-[10px] font-black text-blue-900 uppercase tracking-[0.5em] mb-4">Official Certificate of Verification</h2>
+                            <h1 class="font-serif text-4xl md:text-6xl text-slate-800 italic font-light mb-8">Sertifikat Verifikasi</h1>
+                            <div class="w-24 h-1 bg-blue-900 mb-12"></div>
+                            <p class="text-slate-500 font-medium max-w-md mx-auto leading-relaxed mb-4">Dengan ini menyatakan bahwa instansi pendidikan:</p>
+                            <h3 class="text-2xl md:text-4xl font-black text-slate-900 tracking-tight mb-2" x-text="schoolName"></h3>
+                            <p class="text-sm font-bold text-blue-700 uppercase tracking-widest mb-12" x-text="'NPSN: ' + schoolNpsn"></p>
+                            <p class="text-slate-500 font-medium max-w-lg mx-auto leading-relaxed mb-16">
+                                Telah melewati proses audit keamanan dan verifikasi data legalitas oleh tim kepatuhan <span class="text-blue-600 font-bold">Schoolhub Official</span>. Berhak untuk menyelenggarakan sistem pembayaran digital sekolah secara resmi.
+                            </p>
+                            <div class="grid grid-cols-2 gap-20 w-full max-w-xl mx-auto">
+                                <div class="text-center border-t-2 border-slate-200 pt-4">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ditetapkan Pada</p>
+                                    <p class="text-sm font-bold text-slate-800">11 Februari 2026</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="mb-2 relative h-16 flex items-center justify-center">
+                                        <i class="bi bi-pencil-fill text-blue-900 opacity-20 text-4xl rotate-[30deg]"></i>
+                                    </div>
+                                    <div class="border-t-2 border-slate-200 pt-4">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">CEO Schoolhub Official</p>
+                                        <p class="text-sm font-bold text-slate-800">Dikdik Zain</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="absolute top-0 left-0 w-20 h-20 border-t-4 border-l-4 border-blue-900"></div>
+                        <div class="absolute top-0 right-0 w-20 h-20 border-t-4 border-r-4 border-blue-900"></div>
+                        <div class="absolute bottom-0 left-0 w-20 h-20 border-b-4 border-l-4 border-blue-900"></div>
+                        <div class="absolute bottom-0 right-0 w-20 h-20 border-b-4 border-r-4 border-blue-900"></div>
+                    </div>
+                </div>
+
+                <!-- Download Actions Toolbar -->
+                <div class="mt-8 flex justify-center gap-4">
+                    <button class="px-8 py-5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-2xl hover:bg-slate-50 transition-all hover:-translate-y-1">
+                        <i class="bi bi-file-earmark-pdf-fill text-red-500 text-lg"></i> Download PDF
+                    </button>
+                    <button class="px-8 py-5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 shadow-2xl hover:bg-blue-700 transition-all hover:-translate-y-1">
+                        <i class="bi bi-printer-fill text-lg"></i> Cetak Sertifikat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

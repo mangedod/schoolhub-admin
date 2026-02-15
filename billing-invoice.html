@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Invoice - Schoolhub Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom Checkbox Design */
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background-color: #fff;
+            display: inline-grid;
+            place-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .dark .custom-checkbox {
+            border-color: #334155;
+            background-color: #0f172a;
+        }
+
+        .custom-checkbox:checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .custom-checkbox:checked::before {
+            content: "\F26E";
+            font-family: "bootstrap-icons";
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 900;
+        }
+
+        .custom-checkbox:hover:not(:checked) {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .dark .custom-checkbox:hover:not(:checked) {
+            border-color: #3b82f6;
+            background-color: #1e293b;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-200" x-data="{ 
+     
+    showFilters: false, 
+    showAdjustModal: false,
+    showDetailModal: false,
+    showExportModal: false,
+    adjustmentType: 'reduction',
+    activeMenu: null,
+    selectedInvoice: null,
+    colorMode: localStorage.getItem('color-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+    selectedItems: [],
+    toggleAll() {
+        if (this.selectedItems.length === 2) {
+            this.selectedItems = [];
+        } else {
+            this.selectedItems = ['INV/26/II/0012', 'INV/26/II/0013'];
+        }
+    }
+}">
+
+    <nav class="fixed top-0 z-50 w-full h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-6 shadow-sm transition-colors duration-300">
+        <div class="flex items-center justify-start">
+            <a href="index.html" class="flex items-center gap-2 group">
+                <div class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 font-bold text-sm transform transition-transform group-hover:scale-110">E</div>
+                <span class="self-center text-lg font-bold whitespace-nowrap text-gray-800 dark:text-white">Schoolhub <span class="text-blue-600">Admin</span></span>
+            </a>
+            <span class="ml-4 pl-4 border-l border-gray-200 dark:border-slate-800 text-xs font-bold text-gray-400 uppercase tracking-[0.2em] hidden sm:block">Invoice & Billing</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <button @click="colorMode = (colorMode === 'light' ? 'dark' : 'light'); document.documentElement.className = colorMode; localStorage.setItem('color-theme', colorMode)" 
+                class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 transition-colors">
+                <i x-show="colorMode === 'light'" class="bi bi-moon-stars text-lg"></i>
+                <i x-show="colorMode === 'dark'" class="bi bi-sun text-lg text-yellow-500"></i>
+            </button>
+            <div class="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-slate-800">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-semibold text-gray-800 dark:text-white leading-none mb-1">Budi Santoso</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Bendahara</p>
+                </div>
+                <img class="w-8 h-8 rounded-full border border-gray-200 dark:border-slate-700" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Budi" alt="avatar" />
+            </div>
+        </div>
+    </nav>
+
+    
+
+    <!-- Sidebar -->
+    
+
+    <!-- Content -->
+    <main class="pt-24 pb-12 px-4 max-w-7xl mx-auto">
+        <div>
+            <!-- Back Link -->
+            <a href="javascript:history.back()" class="inline-flex items-center text-[10px] font-bold text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-[0.2em] mb-6 transition-all group">
+                <i class="bi bi-arrow-left mr-2 transition-transform group-hover:-translate-x-1"></i>
+                Kembali ke Master Tagihan
+            </a>
+            
+            <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Invoice & Penagihan</h1>
+                    <p class="text-sm text-gray-500 dark:text-slate-400 mt-1 font-medium">Monitoring status pembayaran dan penyesuaian tagihan.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button @click="showFilters = !showFilters" class="px-5 py-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center hover:bg-gray-50 dark:hover:bg-slate-800 transition shadow-sm text-gray-600 dark:text-slate-300">
+                        <i class="bi bi-funnel mr-2 text-sm text-blue-600"></i>
+                        Filter
+                    </button>
+                    <button @click="showExportModal = true" class="px-5 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-xl shadow-blue-500/20">
+                        <i class="bi bi-download mr-2 text-sm text-blue-200"></i>
+                        Export PDF/Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
+                    <p class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Total Terbit</p>
+                    <p class="text-xl font-black text-gray-900 dark:text-white leading-tight">2.45K</p>
+                </div>
+                <div class="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm border-l-4 border-l-blue-500 transition-colors">
+                    <p class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Unpaid/Pending</p>
+                    <p class="text-xl font-black text-blue-600 leading-tight">1,890</p>
+                </div>
+                <div class="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm border-l-4 border-l-green-500 transition-colors">
+                    <p class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Paid Successfully</p>
+                    <p class="text-xl font-black text-green-600 leading-tight">560</p>
+                </div>
+                <div class="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm border-l-4 border-l-red-500 transition-colors">
+                    <p class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">Overdue</p>
+                    <p class="text-xl font-black text-red-600 leading-tight">120</p>
+                </div>
+            </div>
+
+            <!-- Filters Area -->
+            <div x-show="showFilters" x-cloak x-collapse class="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl p-6 mb-8 shadow-sm transition-colors">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Pencarian</label>
+                        <input type="text" placeholder="Nama, NISN, atau No Invoice" class="w-full p-3 bg-gray-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/20 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Status Pembayaran</label>
+                        <select class="w-full p-3 bg-gray-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/20 dark:text-slate-200">
+                            <option>Semua Status</option>
+                            <option>Dibayar</option>
+                            <option>Belum Dibayar</option>
+                            <option>Proses (Pending)</option>
+                            <option>Dibatalkan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Kelas/Level</label>
+                        <select class="w-full p-3 bg-gray-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/20 dark:text-slate-200">
+                            <option>Semua Kelas</option>
+                            <option>Tier X</option>
+                            <option>Tier XI</option>
+                            <option>Tier XII</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button class="w-full py-3 bg-gray-900 dark:bg-blue-600 text-white rounded-xl text-xs font-bold uppercase hover:bg-gray-800 dark:hover:bg-blue-700 transition">Terapkan Filter</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Card -->
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors relative overflow-visible">
+                <div class="overflow-visible">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead class="bg-gray-50/50 dark:bg-slate-800/50 text-[10px] font-black uppercase text-gray-400 dark:text-slate-500 tracking-widest transition-colors">
+                            <tr>
+                                <th class="px-6 py-5">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" @click="toggleAll()" :checked="selectedItems.length === 2" class="custom-checkbox shadow-sm">
+                                    </div>
+                                </th>
+                                <th class="px-6 py-5">Invoice #</th>
+                                <th class="px-6 py-5">Siswa / NISN</th>
+                                <th class="px-6 py-5">Status</th>
+                                <th class="px-6 py-5">Nominal (Total)</th>
+                                <th class="px-6 py-5">Jatuh Tempo</th>
+                                <th class="px-6 py-5">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50 dark:divide-slate-800">
+                            <tr class="hover:bg-gray-50/30 dark:hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" x-model="selectedItems" value="INV/26/II/0012" class="custom-checkbox shadow-sm">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-gray-900 dark:text-white">INV/26/II/0012</div>
+                                    <div class="text-[9px] text-gray-400 dark:text-slate-500 font-bold bg-gray-100 dark:bg-slate-800 px-1 inline rounded uppercase tracking-tighter">SPP FEB</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-gray-800 dark:text-slate-200">Maulana Yusuf</div>
+                                    <div class="text-xs text-gray-400 dark:text-slate-500 font-medium">NIS: 1099238 â€¢ <span class="text-blue-500">X-RPL-1</span></div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-black text-[9px] uppercase rounded-full tracking-widest border border-green-100 dark:border-green-900/30">Dibayar</span>
+                                    <div class="text-[8px] text-gray-400 dark:text-slate-500 mt-1 font-bold">11 Feb, 09:12 via QRIS</div>
+                                </td>
+                                <td class="px-6 py-4 font-black text-gray-900 dark:text-white">Rp 1.550.000</td>
+                                <td class="px-6 py-4 text-xs font-medium text-gray-500 dark:text-slate-500 italic">10 Feb 2026</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-2">
+                                        <button @click="selectedInvoice = 'INV/26/II/0012'; showDetailModal = true" class="p-2 border border-blue-100 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white transition"><i class="bi bi-eye text-sm"></i></button>
+                                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                                            <button @click="open = !open" class="p-2 border border-gray-100 dark:border-slate-800 text-gray-400 dark:text-slate-500 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition">
+                                                <i class="bi bi-three-dots text-sm"></i>
+                                            </button>
+                                            <div x-show="open" x-cloak 
+                                                x-transition:enter="transition ease-out duration-100"
+                                                x-transition:enter-start="transform opacity-0 scale-95"
+                                                x-transition:enter-end="transform opacity-100 scale-100"
+                                                class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-2xl z-[100] overflow-hidden">
+                                                <div class="py-1">
+                                                    <button class="w-full px-4 py-2.5 text-left text-xs text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800 font-bold flex items-center gap-3">
+                                                        <i class="bi bi-download"></i> Download PDF
+                                                    </button>
+                                                    <button class="w-full px-4 py-2.5 text-left text-xs text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800 font-bold flex items-center gap-3">
+                                                        <i class="bi bi-whatsapp"></i> Chat Wali Murid
+                                                    </button>
+                                                    <div class="border-t border-gray-50 dark:border-slate-800 my-1"></div>
+                                                    <button class="w-full px-4 py-2.5 text-left text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold flex items-center gap-3">
+                                                        <i class="bi bi-trash"></i> Batalkan Invoice
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/30 dark:hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" x-model="selectedItems" value="INV/26/II/0013" class="custom-checkbox shadow-sm">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-gray-900 dark:text-white">INV/26/II/0013</div>
+                                    <div class="text-[9px] text-gray-400 dark:text-slate-500 font-bold bg-gray-100 dark:bg-slate-800 px-1 inline rounded uppercase tracking-tighter">SPP FEB</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-gray-800 dark:text-slate-200">Siska Putri</div>
+                                    <div class="text-xs text-gray-400 dark:text-slate-500 font-medium">NIS: 1099239 â€¢ <span class="text-blue-500">X-RPL-1</span></div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-black text-[9px] uppercase rounded-full tracking-widest border border-blue-100 dark:border-blue-900/30">Pending</span>
+                                    <div class="text-[8px] text-gray-400 dark:text-slate-500 mt-1 font-bold">Waiting Payment</div>
+                                </td>
+                                <td class="px-6 py-4 font-black text-gray-900 dark:text-white">Rp 1.350.000</td>
+                                <td class="px-6 py-4 text-xs font-bold text-red-500 italic">10 Feb 2026</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-2">
+                                        <button @click="selectedInvoice = 'INV/26/II/0013'; showDetailModal = true" class="p-2 border border-blue-100 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white transition"><i class="bi bi-eye text-sm"></i></button>
+                                        <button @click="showAdjustModal = true" class="p-2 border border-orange-100 dark:border-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-600 dark:hover:bg-orange-600 hover:text-white transition" title="Adjust Balance"><i class="bi bi-sliders text-sm"></i></button>
+                                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                                            <button @click="open = !open" class="p-2 border border-gray-100 dark:border-slate-800 text-gray-400 dark:text-slate-500 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition">
+                                                <i class="bi bi-three-dots text-sm"></i>
+                                            </button>
+                                            <div x-show="open" x-cloak 
+                                                x-transition:enter="transition ease-out duration-100"
+                                                x-transition:enter-start="transform opacity-0 scale-95"
+                                                x-transition:enter-end="transform opacity-100 scale-100"
+                                                class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-2xl z-[100] overflow-hidden">
+                                                <div class="py-1">
+                                                    <button class="w-full px-4 py-2.5 text-left text-xs text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800 font-bold flex items-center gap-3">
+                                                        <i class="bi bi-download"></i> Download PDF
+                                                    </button>
+                                                    <button class="w-full px-4 py-2.5 text-left text-xs text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800 font-bold flex items-center gap-3">
+                                                        <i class="bi bi-whatsapp"></i> Chat Wali Murid
+                                                    </button>
+                                                    <div class="border-t border-gray-50 dark:border-slate-800 my-1"></div>
+                                                    <button class="w-full px-4 py-2.5 text-left text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold flex items-center gap-3">
+                                                        <i class="bi bi-trash"></i> Batalkan Invoice
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div class="p-6 bg-gray-50/50 dark:bg-slate-800/50 flex justify-between items-center transition-colors rounded-b-3xl">
+                    <span class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Page 1 of 48</span>
+                    <div class="flex space-x-1">
+                        <button class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-white transition underline decoration-blue-500 decoration-2">01</button>
+                        <button class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition">02</button>
+                        <button class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition">03</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div x-show="showExportModal" x-cloak class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+            <div @click.away="showExportModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-8 shadow-2xl transition-all transform scale-100 border border-gray-100 dark:border-slate-800">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Export Data</h3>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1 uppercase font-bold tracking-widest">Pilih format dokumen</p>
+                    </div>
+                    <button @click="showExportModal = false" class="p-2 bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-slate-500 rounded-full hover:text-gray-900 dark:hover:text-white transition"><i class="bi bi-x-lg text-sm"></i></button>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 mb-8">
+                    <button @click="showExportModal = false" class="group p-4 border-2 border-gray-50 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 rounded-2xl text-left transition-all flex items-center gap-4">
+                        <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center text-red-600 transition-colors group-hover:bg-red-600 group-hover:text-white">
+                            <i class="bi bi-file-earmark-pdf text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-black text-gray-900 dark:text-white tracking-tight">Dokumen PDF (.pdf)</p>
+                            <p class="text-[10px] text-gray-400 dark:text-slate-500 font-bold uppercase tracking-wider">Laporan Resmi & Cetak</p>
+                        </div>
+                    </button>
+
+                    <button @click="showExportModal = false" class="group p-4 border-2 border-gray-50 dark:border-slate-800 hover:border-green-600 dark:hover:border-green-500 rounded-2xl text-left transition-all flex items-center gap-4">
+                        <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-xl flex items-center justify-center text-green-600 transition-colors group-hover:bg-green-600 group-hover:text-white">
+                            <i class="bi bi-file-earmark-excel text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-black text-gray-900 dark:text-white tracking-tight">Spreadsheet Excel (.xlsx)</p>
+                            <p class="text-[10px] text-gray-400 dark:text-slate-500 font-bold uppercase tracking-wider">Pengolahan Data Lanjut</p>
+                        </div>
+                    </button>
+
+                    <button @click="showExportModal = false" class="group p-4 border-2 border-gray-50 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 rounded-2xl text-left transition-all flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                            <i class="bi bi-file-earmark-spreadsheet text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-black text-gray-900 dark:text-white tracking-tight">Data CSV (.csv)</p>
+                            <p class="text-[10px] text-gray-400 dark:text-slate-500 font-bold uppercase tracking-wider">Import sistem lain</p>
+                        </div>
+                    </button>
+                </div>
+
+                <p class="text-[9px] text-center text-gray-400 dark:text-slate-600 font-medium italic">Data yang dieksport akan menyesuaikan dengan filter yang sedang aktif.</p>
+            </div>
+        </div>
+
+        <!-- Adjustment Modal (Stub) -->
+        <div x-show="showAdjustModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+            <div @click.away="showAdjustModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg p-8 shadow-2xl transition-all transform scale-100">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Penyesuaian Tagihan</h3>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1 uppercase font-bold tracking-widest">Invoice INV/26/II/0013</p>
+                    </div>
+                    <button @click="showAdjustModal = false" class="p-2 bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-slate-500 rounded-full hover:text-gray-900 dark:hover:text-white transition"><i class="bi bi-x-lg text-sm"></i></button>
+                </div>
+
+                <div class="space-y-6 mb-8">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Jenis Penyesuaian</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button @click="adjustmentType = 'reduction'" 
+                                :class="adjustmentType === 'reduction' ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-600/20' : 'border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900'"
+                                class="p-4 border-2 rounded-2xl text-left transition-all duration-200 group relative overflow-hidden">
+                                <div x-show="adjustmentType === 'reduction'" class="absolute -right-2 -top-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center pt-2 pr-2">
+                                    <i class="bi bi-check-lg text-xs"></i>
+                                </div>
+                                <p :class="adjustmentType === 'reduction' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-slate-500'" 
+                                   class="text-xs font-black uppercase tracking-widest">Potongan (-)</p>
+                                <p :class="adjustmentType === 'reduction' ? 'text-blue-400 dark:text-blue-500/60' : 'text-gray-300 dark:text-slate-700'"
+                                   class="text-[10px] mt-1 font-medium italic leading-tight">Gunakan untuk diskon atau koreksi kelebihan.</p>
+                            </button>
+                            <button @click="adjustmentType = 'addition'"
+                                :class="adjustmentType === 'addition' ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 ring-2 ring-orange-500/20' : 'border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900'"
+                                class="p-4 border-2 rounded-2xl text-left transition-all duration-200 group relative overflow-hidden">
+                                <div x-show="adjustmentType === 'addition'" class="absolute -right-2 -top-2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center pt-2 pr-2">
+                                    <i class="bi bi-check-lg text-xs"></i>
+                                </div>
+                                <p :class="adjustmentType === 'addition' ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400 dark:text-slate-500'"
+                                   class="text-xs font-black uppercase tracking-widest">Penambahan (+)</p>
+                                <p :class="adjustmentType === 'addition' ? 'text-orange-400 dark:text-orange-500/60' : 'text-gray-300 dark:text-slate-700'"
+                                   class="text-[10px] mt-1 font-medium italic leading-tight">Gunakan untuk denda manual atau kekurangan.</p>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Nominal Penyesuaian</label>
+                        <div class="flex items-center space-x-2">
+                             <span class="text-lg font-black text-gray-300 dark:text-slate-700 italic">Rp</span>
+                             <input type="number" class="flex-1 p-3 bg-gray-50 dark:bg-slate-800 border-none rounded-xl font-bold text-lg focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/20 dark:text-white" placeholder="0">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Alasan / Catatan</label>
+                        <textarea class="w-full p-4 bg-gray-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/20 dark:text-white" rows="3" placeholder="Contoh: Koreksi beasiswa prestasi kelas XI..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button @click="showAdjustModal = false" class="w-full py-4 text-xs font-black uppercase text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-white transition">Batalkan</button>
+                    <button @click="showAdjustModal = false" class="w-full py-4 bg-gray-900 dark:bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-black dark:hover:bg-blue-700 transition shadow-xl shadow-gray-200 dark:shadow-none">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Invoice Modal -->
+        <div x-show="showDetailModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+            <div @click.away="showDetailModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl transition-all transform scale-100 border border-gray-100 dark:border-slate-800">
+                <!-- Modal Header -->
+                <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                            <i class="bi bi-file-earmark-text text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-gray-900 dark:text-white tracking-tight" x-text="'Detail Invoice ' + selectedInvoice"></h3>
+                            <p class="text-[10px] text-gray-500 dark:text-slate-400 uppercase font-bold tracking-widest">Status: <span class="text-green-600 dark:text-green-400">Aktif</span></p>
+                        </div>
+                    </div>
+                    <button @click="showDetailModal = false" class="p-2 bg-white dark:bg-slate-800 text-gray-400 dark:text-slate-500 rounded-xl hover:text-gray-900 dark:hover:text-white transition shadow-sm">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-8 max-h-[70vh] overflow-y-auto">
+                    <div class="grid grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Informasi Siswa</label>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">Maulana Yusuf</p>
+                            <p class="text-xs text-gray-500">NISN: 1099238 â€¢ Kelas X-RPL-1</p>
+                        </div>
+                        <div class="text-right">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Tanggal Terbit</label>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">01 Feb 2026</p>
+                            <p class="text-xs text-gray-500 uppercase">Jatuh Tempo: 10 Feb 2026</p>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden mb-8">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-slate-500 uppercase font-bold">
+                                <tr>
+                                    <th class="px-4 py-3">Deskripsi Tagihan</th>
+                                    <th class="px-4 py-3 text-right">Nominal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-slate-800 text-gray-600 dark:text-slate-400">
+                                <tr>
+                                    <td class="px-4 py-3">SPP Bulan Februari 2026</td>
+                                    <td class="px-4 py-3 text-right font-semibold">Rp 1.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3">Kegiatan Ekstrakurikuler</td>
+                                    <td class="px-4 py-3 text-right font-semibold">Rp 250.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3">Lab & Praktikum</td>
+                                    <td class="px-4 py-3 text-right font-semibold">Rp 300.000</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="bg-blue-50/50 dark:bg-blue-900/10 font-bold text-gray-900 dark:text-white">
+                                <tr>
+                                    <td class="px-4 py-4 uppercase tracking-widest text-[10px]">Total Tagihan</td>
+                                    <td class="px-4 py-4 text-right text-base text-blue-600 dark:text-blue-400">Rp 1.550.000</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Payment History (Optional) -->
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Riwayat Pembayaran</label>
+                        <div class="flex items-center gap-4 bg-green-50/50 dark:bg-green-900/10 p-4 rounded-2xl border border-green-100 dark:border-green-900/20">
+                            <div class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center">
+                                <i class="bi bi-check"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-gray-900 dark:text-white">Pembayaran Berhasil via QRIS</p>
+                                <p class="text-[10px] text-gray-500">11 Feb 2026, 09:12 WIB â€¢ Reff: QRN228102</p>
+                            </div>
+                            <span class="text-xs font-black text-green-600 dark:text-green-400">LUNAS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-6 border-t border-gray-100 dark:border-slate-800 flex gap-3">
+                    <button class="flex-1 py-3 bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-slate-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-slate-700 transition">
+                        <i class="bi bi-download mr-2"></i> Download PDF
+                    </button>
+                    <button class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
+                        <i class="bi bi-send mr-2"></i> Kirim Ulang WA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Synchronize color mode across pages
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'color-theme') {
+                document.documentElement.className = e.newValue;
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

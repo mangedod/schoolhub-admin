@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin - Schoolhub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex items-center justify-center p-6">
+
+    
+    
+    <div class="w-full max-w-md">
+        <!-- Logo -->
+        <div class="flex flex-col items-center mb-10">
+            <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-200 dark:shadow-none mb-4">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-black italic uppercase tracking-tighter dark:text-white">Schoolhub Admin</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mt-2">Selamat datang kembali di dashboard sekolah</p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-10 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
+            <form action="index.html" class="space-y-6">
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Email / Username</label>
+                    <input type="text" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 dark:text-white outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700" placeholder="admin@sekolah.sch.id">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2 ml-1">
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Password</label>
+                        <a href="forgot.html" class="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-500 transition-colors">Lupa Password?</a>
+                    </div>
+                    <input type="password" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 dark:text-white outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700" placeholder="••••••••">
+                </div>
+
+                <div class="flex items-center space-x-3 mb-2 ml-1">
+                    <input type="checkbox" id="remember" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-600 bg-slate-100 border-none">
+                    <label for="remember" class="text-xs font-semibold text-slate-500 dark:text-slate-400">Ingat saya</label>
+                </div>
+
+                <button type="submit" class="w-full py-5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none italic">
+                    Masuk Sekarang
+                </button>
+            </form>
+
+            <div class="mt-8 pt-8 border-t border-slate-50 dark:border-slate-800 flex flex-col items-center">
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-6 text-center">Metode Masuk Lainnya</p>
+                <a href="quick-login.html" class="flex items-center space-x-3 px-6 py-3 border-2 border-slate-100 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-4.44-5.026c1.123-1.477 1.946-3.216 2.376-5.122m3.655-3.655a9 9 0 11-1.414 1.414L20 20"></path></svg>
+                    <span class="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Akses Cepat (Tanpa Input Email)</span>
+                </a>
+            </div>
+        </div>
+
+        <p class="mt-10 text-center text-xs font-medium text-slate-400">
+            Hanya Admin yang terdaftar di sistem dapat mengakses dashboard ini. Hubungi <span class="text-indigo-600 font-bold">Pusat Bantuan Schoolhub</span> jika ada kendala.
+        </p>
+    </div>
+
+</body>
+</html>
+
+
